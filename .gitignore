@@ -1,4 +1,4 @@
 node_modules
-aws-exports.js
-.expo/
-amplify
+/aws-exports.js
+/.expo/
+/amplify
