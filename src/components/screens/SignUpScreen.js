@@ -14,24 +14,13 @@ import {
   FlatList,
   Animated,
 } from 'react-native';
-
 import { Ionicons } from '@expo/vector-icons';
-
 import { Container, Item, Input } from 'native-base';
-
-// AWS Amplify modular import
 import Auth from '@aws-amplify/auth';
-
-// Import data for countries
 import data from '../countriesData';
-
-// Load the app logo
 const logo = require('../images/site-logo.png');
 
-// Default render of country flag
 const defaultFlag = data.filter(obj => obj.name === 'United States')[0].flag;
-
-// Default render of country code
 const defaultCode = data.filter(obj => obj.name === 'United States')[0]
   .dial_code;
 
@@ -47,17 +36,20 @@ export default class SignUpScreen extends React.Component {
     flag: defaultFlag,
     modalVisible: false,
     authCode: '',
+    firstName: '',
+    lastName: '',
   };
-  // Get user input
+
   onChangeText(key, value) {
     this.setState({
       [key]: value,
     });
   }
-  // Methods for logo animation
+
   componentDidMount() {
     this.fadeIn();
   }
+
   fadeIn() {
     Animated.timing(this.state.fadeIn, {
       toValue: 1,
@@ -66,6 +58,7 @@ export default class SignUpScreen extends React.Component {
     }).start();
     this.setState({ isHidden: true });
   }
+
   fadeOut() {
     Animated.timing(this.state.fadeOut, {
       toValue: 0,
@@ -74,17 +67,18 @@ export default class SignUpScreen extends React.Component {
     }).start();
     this.setState({ isHidden: false });
   }
-  // Functions for Phone Input
+
   showModal() {
     this.setState({ modalVisible: true });
-    // console.log('Shown')
   }
+
   hideModal() {
     this.setState({ modalVisible: false });
     // refocus on phone Input after selecting country and/or closing Modal
     this.refs.FourthInput._root.focus();
     // console.log('Hidden')
   }
+
   async getCountry(country) {
     const countryData = await data;
     try {
@@ -101,15 +95,28 @@ export default class SignUpScreen extends React.Component {
       console.log(err);
     }
   }
-  // Sign up user with AWS Amplify Auth
+
   async signUp() {
-    const { username, password, email, phoneNumber } = this.state;
+    const {
+      username,
+      password,
+      email,
+      phoneNumber,
+      firstName,
+      lastName,
+    } = this.state;
     // rename variable to conform with Amplify Auth field phone attribute
     const phone_number = phoneNumber;
+
     await Auth.signUp({
       username,
       password,
-      attributes: { email, phone_number },
+      attributes: {
+        email,
+        phone_number,
+        'custom:firstName': firstName,
+        'custom:lastName': lastName,
+      },
     })
       .then(() => {
         console.log('sign up successful!');
@@ -125,7 +132,7 @@ export default class SignUpScreen extends React.Component {
         }
       });
   }
-  // Confirm users and redirect them to the SignIn page
+
   async confirmSignUp() {
     const { username, authCode } = this.state;
     await Auth.confirmSignUp(username, authCode)
@@ -143,7 +150,7 @@ export default class SignUpScreen extends React.Component {
         }
       });
   }
-  // Resend code if not received already
+
   async resendSignUp() {
     const { username } = this.state;
     await Auth.resendSignUp(username)
@@ -158,6 +165,7 @@ export default class SignUpScreen extends React.Component {
         }
       });
   }
+
   render() {
     let { fadeOut, fadeIn, isHidden, flag } = this.state;
     const countryData = data;
@@ -187,7 +195,27 @@ export default class SignUpScreen extends React.Component {
               </View>
               <Container style={styles.infoContainer}>
                 <View style={styles.container}>
-                  {/* username section  */}
+                  <Item style={styles.itemStyle}>
+                    <Ionicons name="ios-person" style={styles.iconStyle} />
+                    <Input
+                      style={styles.input}
+                      placeholder="First Name"
+                      placeholderTextColor="#adb4bc"
+                      returnKeyType="next"
+                      keyboardType={'phone-pad'}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      onChangeText={value =>
+                        this.onChangeText('firstName', value)
+                      }
+                      onSubmitEditing={event => {
+                        this.refs.SecondInput._root.focus();
+                      }}
+                      onFocus={() => this.fadeOut()}
+                      onEndEditing={() => this.fadeIn()}
+                    />
+                  </Item>
+
                   <Item style={styles.itemStyle}>
                     <Ionicons name="ios-person" style={styles.iconStyle} />
                     <Input
@@ -199,11 +227,12 @@ export default class SignUpScreen extends React.Component {
                       autoCapitalize="none"
                       autoCorrect={false}
                       onSubmitEditing={event => {
-                        this.refs.SecondInput._root.focus();
+                        this.refs.ThirdInput._root.focus();
                       }}
                       onChangeText={value =>
                         this.onChangeText('username', value)
                       }
+                      ref="SecondInput"
                       onFocus={() => this.fadeOut()}
                       onEndEditing={() => this.fadeIn()}
                     />
@@ -219,10 +248,9 @@ export default class SignUpScreen extends React.Component {
                       autoCapitalize="none"
                       autoCorrect={false}
                       secureTextEntry={true}
-                      // ref={c => this.SecondInput = c}
-                      ref="SecondInput"
+                      ref="ThirdInput"
                       onSubmitEditing={event => {
-                        this.refs.ThirdInput._root.focus();
+                        this.refs.FourthInput._root.focus();
                       }}
                       onChangeText={value =>
                         this.onChangeText('password', value)
@@ -243,9 +271,9 @@ export default class SignUpScreen extends React.Component {
                       autoCapitalize="none"
                       autoCorrect={false}
                       secureTextEntry={false}
-                      ref="ThirdInput"
+                      ref="FourthInput"
                       onSubmitEditing={event => {
-                        this.refs.FourthInput._root.focus();
+                        this.refs.Fifth._root.focus();
                       }}
                       onChangeText={value => this.onChangeText('email', value)}
                       onFocus={() => this.fadeOut()}
@@ -274,7 +302,7 @@ export default class SignUpScreen extends React.Component {
                       autoCapitalize="none"
                       autoCorrect={false}
                       secureTextEntry={false}
-                      ref="FourthInput"
+                      ref="FifthInput"
                       value={this.state.phoneNumber}
                       onChangeText={val => {
                         if (this.state.phoneNumber === '') {

@@ -89,7 +89,11 @@ export default class SignInScreen extends React.Component {
                 {isHidden ? (
                   <Animated.Image
                     source={logo}
-                    style={{ opacity: fadeIn, width: 172, height: 81 }}
+                    style={{
+                      opacity: fadeIn,
+                      width: 172,
+                      height: 81,
+                    }}
                   />
                 ) : (
                   <Animated.Image
@@ -170,7 +174,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    height: 500,
+    height: 300,
     bottom: 25,
     flexDirection: 'row',
     justifyContent: 'center',
@@ -202,10 +206,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    height: 800,
-    bottom: 180,
-    alignItems: 'center',
+    height: 150,
+    bottom: 425,
+    flexDirection: 'row',
     justifyContent: 'center',
-    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 30,
   },
 });

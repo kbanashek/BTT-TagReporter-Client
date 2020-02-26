@@ -102,7 +102,7 @@ AppTabNavigator.navigationOptions = ({ navigation }) => {
 const AppStackNavigator = createStackNavigator({
   Header: {
     screen: AppTabNavigator,
-    // Set the header icon
+
     navigationOptions: ({ navigation }) => ({
       headerLeft: (
         <TouchableOpacity onPress={() => navigation.toggleDrawer()}>
@@ -124,33 +124,50 @@ const AppDrawerNavigator = createDrawerNavigator({
 });
 
 // Auth stack
-const AuthStackNavigator = createStackNavigator({
-  Welcome: {
-    screen: WelcomeScreen,
-    navigationOptions: () => ({
-      title: `BTT - Tag Reporter`, // for the header screen
-      headerBackTitle: 'Back',
-    }),
+const AuthStackNavigator = createStackNavigator(
+  {
+    Welcome: {
+      screen: WelcomeScreen,
+      navigationOptions: () => ({
+        title: `BTT - Tag Reporter`, // for the header screen
+        headerBackTitle: 'Back',
+        backgroundColor: 'black',
+      }),
+      cardStyle: { backgroundColor: 'transparent' },
+    },
+    SignUp: {
+      screen: SignUpScreen,
+      navigationOptions: () => ({
+        title: `Create a new account`,
+      }),
+    },
+    SignIn: {
+      screen: SignInScreen,
+      navigationOptions: () => ({
+        title: `Log in to your account`,
+      }),
+    },
+    ForgetPassword: {
+      screen: ForgetPasswordScreen,
+      navigationOptions: () => ({
+        title: `Create a new password`,
+      }),
+    },
   },
-  SignUp: {
-    screen: SignUpScreen,
-    navigationOptions: () => ({
-      title: `Create a new account`,
-    }),
+  {
+    initialRouteName: 'Welcome',
+    /* The header config from HomeScreen is now here */
+    defaultNavigationOptions: {
+      headerStyle: {
+        backgroundColor: '#0B7EA0',
+      },
+      headerTintColor: '#ccc',
+      headerTitleStyle: {
+        fontWeight: 'bold',
+      },
+    },
   },
-  SignIn: {
-    screen: SignInScreen,
-    navigationOptions: () => ({
-      title: `Log in to your account`,
-    }),
-  },
-  ForgetPassword: {
-    screen: ForgetPasswordScreen,
-    navigationOptions: () => ({
-      title: `Create a new password`,
-    }),
-  },
-});
+);
 
 // Application nav stack
 const appNav = createSwitchNavigator({

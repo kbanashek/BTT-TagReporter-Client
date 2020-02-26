@@ -1,8 +1,14 @@
 import React from 'react';
 import { StyleSheet, View, Text } from 'react-native';
+import Auth from '@aws-amplify/auth';
 
 export default class ProfileScreen extends React.Component {
   render() {
+    // TODO - Render user profile properties
+    // Auth.currentAuthenticatedUser()
+    //   .then(user => console.log({ user }))
+    //   .catch(err => console.log(err));
+
     return (
       <View style={styles.container}>
         <Text style={styles.textStyle}>Profile</Text>
