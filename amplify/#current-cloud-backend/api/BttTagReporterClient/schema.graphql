@@ -1,0 +1,26 @@
+type TagReports
+  @model
+  @auth(
+    rules: [
+      {
+        allow: owner
+        ownerField: "owner"
+        operations: [create, update, delete]
+      }
+    ]
+  ) {
+  id: ID!
+  tagNumber: String!
+  fishType: String!
+  tagDate: String!
+  tagLocation: String!
+  tagArea: String!
+  comment: String!
+  guideName: String!
+  fishLength: String!
+  fishWeight: String
+  email: String!
+  phone: String!
+  pictureUrl: String
+  owner: String
+}

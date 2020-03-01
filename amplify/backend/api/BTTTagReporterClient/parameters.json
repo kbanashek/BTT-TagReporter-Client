@@ -1,0 +1,11 @@
+{
+    "AppSyncApiName": "BttTagReporterClient",
+    "DynamoDBBillingMode": "PAY_PER_REQUEST",
+    "DynamoDBEnableServerSideEncryption": "false",
+    "AuthCognitoUserPoolId": {
+        "Fn::GetAtt": [
+            "authreactnativeauth55693b4f",
+            "Outputs.UserPoolId"
+        ]
+    }
+}

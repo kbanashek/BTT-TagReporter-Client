@@ -1,34 +1,30 @@
 import React from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { TouchableOpacity, View, Alert } from 'react-native';
 import { createSwitchNavigator, createAppContainer } from 'react-navigation';
 import { createMaterialTopTabNavigator } from 'react-navigation-tabs';
 import { createDrawerNavigator } from 'react-navigation-drawer';
 import { createStackNavigator } from 'react-navigation-stack';
 import { Ionicons } from '@expo/vector-icons';
+import NetInfo from '@react-native-community/netinfo';
 
-// Auth stack screen imports
 import AuthLoadingScreen from './src/components/screens/AuthLoadingScreen';
 import WelcomeScreen from './src/components/screens/WelcomeScreen';
 import SignUpScreen from './src/components/screens/SignUpScreen';
 import SignInScreen from './src/components/screens/SignInScreen';
 import ForgetPasswordScreen from './src/components/screens/ForgetPasswordScreen';
-
-// App stack screen imports
 import HomeScreen from './src/components/screens/HomeScreen';
 import SettingsScreen from './src/components/screens/SettingsScreen';
 import ProfileScreen from './src/components/screens/ProfileScreen';
 
-// Amplify imports and config
 import Amplify from '@aws-amplify/core';
 import awsmobile from './aws-exports';
 Amplify.configure(awsmobile);
 
-// Configurations and options for the AppTabNavigator
 const configurations = {
-  Home: {
+  ReportTag: {
     screen: HomeScreen,
     navigationOptions: {
-      tabBarLabel: 'Home',
+      tabBarLabel: 'Report Tag',
       tabBarIcon: ({ tintColor }) => (
         <Ionicons style={{ fontSize: 26, color: tintColor }} name="ios-home" />
       ),
@@ -85,16 +81,30 @@ const options = {
     },
     showIcon: true,
   },
+  defaultNavigationOptions: {
+    headerStyle: {
+      backgroundColor: '#efefef',
+    },
+    headerTintColor: '#ccc',
+    headerTitleStyle: {
+      fontWeight: 'bold',
+    },
+  },
 };
 
-// Bottom App tabs
 const AppTabNavigator = createMaterialTopTabNavigator(configurations, options);
 
-// Making the common header title dynamic in AppTabNavigator
 AppTabNavigator.navigationOptions = ({ navigation }) => {
   let { routeName } = navigation.state.routes[navigation.state.index];
+  console.log(navigation.state.status);
   let headerTitle = routeName;
   return {
+    headerStyle: {
+      backgroundColor: '#efefef',
+      color: 'white',
+      activeTintColor: '#fff',
+      inactiveTintColor: '#fff9',
+    },
     headerTitle,
   };
 };
@@ -115,15 +125,13 @@ const AppStackNavigator = createStackNavigator({
   },
 });
 
-// App stack for the drawer
 const AppDrawerNavigator = createDrawerNavigator({
-  Tabs: AppStackNavigator, // defined above
-  Home: HomeScreen,
+  Tabs: AppStackNavigator,
+  ReportTag: HomeScreen,
   Profile: ProfileScreen,
   Settings: SettingsScreen,
 });
 
-// Auth stack
 const AuthStackNavigator = createStackNavigator(
   {
     Welcome: {
@@ -159,9 +167,9 @@ const AuthStackNavigator = createStackNavigator(
     /* The header config from HomeScreen is now here */
     defaultNavigationOptions: {
       headerStyle: {
-        backgroundColor: '#0B7EA0',
+        backgroundColor: '#efefef',
       },
-      headerTintColor: '#ccc',
+      headerTintColor: '#000',
       headerTitleStyle: {
         fontWeight: 'bold',
       },
@@ -169,16 +177,38 @@ const AuthStackNavigator = createStackNavigator(
   },
 );
 
-// Application nav stack
 const appNav = createSwitchNavigator({
   Authloading: AuthLoadingScreen,
-  Auth: AuthStackNavigator, // the Auth stack
-  App: AppDrawerNavigator, // the App stack
+  Auth: AuthStackNavigator,
+  App: AppDrawerNavigator,
 });
 
 const AppContainer = createAppContainer(appNav);
 
 export default class App extends React.Component {
+  state = {
+    status: false,
+  };
+
+  componentDidMount() {
+    NetInfo.isConnected.addEventListener(
+      'connectionChange',
+      this.handleConnectionChange,
+    );
+  }
+
+  componentWillUnmount() {
+    NetInfo.isConnected.removeEventListener(
+      'connectionChange',
+      this.handleConnectionChange,
+    );
+  }
+
+  handleConnectionChange = isConnected => {
+    this.setState({ status: isConnected });
+    console.log(`this.state.status: ${this.state.status}`);
+  };
+
   render() {
     return <AppContainer />;
   }

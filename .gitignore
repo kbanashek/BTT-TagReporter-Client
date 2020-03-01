@@ -1,4 +1,6 @@
 node_modules
-/aws-exports.js
+
 /.expo/
-/amplify
+
+../ReactNativeAuth/amplify/mock-data
+amplify/mock-data

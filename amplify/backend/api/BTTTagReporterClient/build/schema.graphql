@@ -1,0 +1,205 @@
+type TagReports {
+  id: ID!
+  tagNumber: String!
+  fishType: String!
+  tagDate: String!
+  tagLocation: String!
+  tagArea: String!
+  comment: String!
+  guideName: String!
+  fishLength: String!
+  fishWeight: String
+  email: String!
+  phone: String!
+  pictureUrl: String
+  owner: String
+}
+
+enum ModelSortDirection {
+  ASC
+  DESC
+}
+
+type ModelTagReportsConnection {
+  items: [TagReports]
+  nextToken: String
+}
+
+input ModelStringInput {
+  ne: String
+  eq: String
+  le: String
+  lt: String
+  ge: String
+  gt: String
+  contains: String
+  notContains: String
+  between: [String]
+  beginsWith: String
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  size: ModelSizeInput
+}
+
+input ModelIDInput {
+  ne: ID
+  eq: ID
+  le: ID
+  lt: ID
+  ge: ID
+  gt: ID
+  contains: ID
+  notContains: ID
+  between: [ID]
+  beginsWith: ID
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  size: ModelSizeInput
+}
+
+input ModelIntInput {
+  ne: Int
+  eq: Int
+  le: Int
+  lt: Int
+  ge: Int
+  gt: Int
+  between: [Int]
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+}
+
+input ModelFloatInput {
+  ne: Float
+  eq: Float
+  le: Float
+  lt: Float
+  ge: Float
+  gt: Float
+  between: [Float]
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+}
+
+input ModelBooleanInput {
+  ne: Boolean
+  eq: Boolean
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+}
+
+input ModelSizeInput {
+  ne: Int
+  eq: Int
+  le: Int
+  lt: Int
+  ge: Int
+  gt: Int
+  between: [Int]
+}
+
+input ModelTagReportsFilterInput {
+  id: ModelIDInput
+  tagNumber: ModelStringInput
+  fishType: ModelStringInput
+  tagDate: ModelStringInput
+  tagLocation: ModelStringInput
+  tagArea: ModelStringInput
+  comment: ModelStringInput
+  guideName: ModelStringInput
+  fishLength: ModelStringInput
+  fishWeight: ModelStringInput
+  email: ModelStringInput
+  phone: ModelStringInput
+  pictureUrl: ModelStringInput
+  owner: ModelStringInput
+  and: [ModelTagReportsFilterInput]
+  or: [ModelTagReportsFilterInput]
+  not: ModelTagReportsFilterInput
+}
+
+type Query {
+  getTagReports(id: ID!): TagReports
+  listTagReportss(filter: ModelTagReportsFilterInput, limit: Int, nextToken: String): ModelTagReportsConnection
+}
+
+input CreateTagReportsInput {
+  id: ID
+  tagNumber: String!
+  fishType: String!
+  tagDate: String!
+  tagLocation: String!
+  tagArea: String!
+  comment: String!
+  guideName: String!
+  fishLength: String!
+  fishWeight: String
+  email: String!
+  phone: String!
+  pictureUrl: String
+  owner: String
+}
+
+input UpdateTagReportsInput {
+  id: ID!
+  tagNumber: String
+  fishType: String
+  tagDate: String
+  tagLocation: String
+  tagArea: String
+  comment: String
+  guideName: String
+  fishLength: String
+  fishWeight: String
+  email: String
+  phone: String
+  pictureUrl: String
+  owner: String
+}
+
+input DeleteTagReportsInput {
+  id: ID
+}
+
+type Mutation {
+  createTagReports(input: CreateTagReportsInput!, condition: ModelTagReportsConditionInput): TagReports
+  updateTagReports(input: UpdateTagReportsInput!, condition: ModelTagReportsConditionInput): TagReports
+  deleteTagReports(input: DeleteTagReportsInput!, condition: ModelTagReportsConditionInput): TagReports
+}
+
+input ModelTagReportsConditionInput {
+  tagNumber: ModelStringInput
+  fishType: ModelStringInput
+  tagDate: ModelStringInput
+  tagLocation: ModelStringInput
+  tagArea: ModelStringInput
+  comment: ModelStringInput
+  guideName: ModelStringInput
+  fishLength: ModelStringInput
+  fishWeight: ModelStringInput
+  email: ModelStringInput
+  phone: ModelStringInput
+  pictureUrl: ModelStringInput
+  and: [ModelTagReportsConditionInput]
+  or: [ModelTagReportsConditionInput]
+  not: ModelTagReportsConditionInput
+}
+
+enum ModelAttributeTypes {
+  binary
+  binarySet
+  bool
+  list
+  map
+  number
+  numberSet
+  string
+  stringSet
+  _null
+}
+
+type Subscription {
+  onCreateTagReports(owner: String!): TagReports @aws_subscribe(mutations: ["createTagReports"])
+  onUpdateTagReports(owner: String!): TagReports @aws_subscribe(mutations: ["updateTagReports"])
+  onDeleteTagReports(owner: String!): TagReports @aws_subscribe(mutations: ["deleteTagReports"])
+}

@@ -10,6 +10,11 @@
 			"StackName": "amplify-reactnativeauth-dev-95043",
 			"StackId": "arn:aws:cloudformation:us-east-1:269434377690:stack/amplify-reactnativeauth-dev-95043/60cbd910-53f0-11ea-8d89-1277bf9feb05",
 			"AmplifyAppId": "dd4jpojx3w1b8"
+		},
+		"categories": {
+			"auth": {
+				"reactnativeauth55693b4f": {}
+			}
 		}
 	},
 	"auth": {
@@ -18,11 +23,6 @@
 			"providerPlugin": "awscloudformation",
 			"dependsOn": [],
 			"customAuth": false,
-			"providerMetadata": {
-				"s3TemplateURL": "https://s3.amazonaws.com/amplify-reactnativeauth-dev-95043-deployment/amplify-cfn-templates/auth/reactnativeauth55693b4f-cloudformation-template.yml",
-				"logicalId": "authreactnativeauth55693b4f"
-			},
-			"lastPushTimeStamp": "2020-02-20T14:59:10.581Z",
 			"output": {
 				"AppClientSecret": "1stqdrlo1c60t0o9d8nhe8g2kag2otfol1f13os5c15eu99299ou",
 				"UserPoolId": "us-east-1_jkvmgVJEf",
@@ -32,7 +32,36 @@
 				"IdentityPoolName": "reactnativeauth55693b4f_identitypool_55693b4f__dev",
 				"UserPoolName": "reactnativeauth55693b4f_userpool_55693b4f"
 			},
-			"lastPushDirHash": "ZnnifJIo30HHuXIMdRUMn1wCd80="
+			"lastPushTimeStamp": "2020-03-01T14:32:31.866Z",
+			"providerMetadata": {
+				"s3TemplateURL": "https://s3.amazonaws.com/amplify-reactnativeauth-dev-95043-deployment/amplify-cfn-templates/auth/reactnativeauth55693b4f-cloudformation-template.yml",
+				"logicalId": "authreactnativeauth55693b4f"
+			}
+		}
+	},
+	"api": {
+		"BttTagReporterClient": {
+			"service": "AppSync",
+			"providerPlugin": "awscloudformation",
+			"output": {
+				"authConfig": {
+					"additionalAuthenticationProviders": [],
+					"defaultAuthentication": {
+						"authenticationType": "AMAZON_COGNITO_USER_POOLS",
+						"userPoolConfig": {
+							"userPoolId": "authreactnativeauth55693b4f"
+						}
+					}
+				},
+				"GraphQLAPIIdOutput": "rvoqmxv6xjaq3lti2c3hluqudq",
+				"GraphQLAPIEndpointOutput": "https://umkwemz75rfqvbcokzz5muehiq.appsync-api.us-east-1.amazonaws.com/graphql"
+			},
+			"providerMetadata": {
+				"s3TemplateURL": "https://s3.amazonaws.com/amplify-reactnativeauth-dev-95043-deployment/amplify-cfn-templates/api/cloudformation-template.json",
+				"logicalId": "apiBttTagReporterClient"
+			},
+			"lastPushTimeStamp": "2020-03-01T14:32:35.425Z",
+			"lastPushDirHash": "Fbx74kbnAr5ZyKsFuwPpGRo+R8Y="
 		}
 	}
 }
