@@ -96,7 +96,6 @@ const AppTabNavigator = createMaterialTopTabNavigator(configurations, options);
 
 AppTabNavigator.navigationOptions = ({ navigation }) => {
   let { routeName } = navigation.state.routes[navigation.state.index];
-  console.log(navigation.state.status);
   let headerTitle = routeName;
   return {
     headerStyle: {

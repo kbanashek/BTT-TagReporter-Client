@@ -7,40 +7,18 @@ import * as queries from '../../graphql/queries';
 export default class ProfileScreen extends React.Component {
   state = { name: '', description: '', tagReports: [] };
 
+  getTagReports = async () => {
+    const allTagReports = await API.graphql(
+      graphqlOperation(queries.listTagReportss),
+    );
+    this.setState({ tagReports: allTagReports.data.listTagReportss.items });
+  };
+
   async componentDidMount() {
-    const readNote = `query MyQuery {
-      listTagReports {
-        items {
-          id
-          comment
-          email
-          fishLength
-          fishType
-          fishWeight
-          guideName
-          phone
-          owner
-          pictureUrl
-          tagArea
-          tagDate
-          tagLocation
-          tagNumber
-        }
-      }
-    }`;
-
     try {
-      const getTagReports = async () => {
-        const allTagReports = await API.graphql(
-          graphqlOperation(queries.listTagReportss),
-        );
-        //console.log('successfully fetched', allTagReports);
-
-        this.setState({ tagReports: allTagReports.data.listTagReportss.items });
-      };
-      getTagReports();
+      this.getTagReports();
     } catch (e) {
-      console.log(e);
+      console.log(`error${e}`);
     }
   }
 
