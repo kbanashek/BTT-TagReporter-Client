@@ -1,5 +1,12 @@
 import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  SafeAreaView,
+} from 'react-native';
 import { API, graphqlOperation, Auth } from 'aws-amplify';
 import Constants from 'expo-constants';
 import * as Location from 'expo-location';
@@ -13,13 +20,13 @@ export default class HomeScreen extends React.Component {
     user: null,
     location: null,
     errorMessage: null,
-    area: null,
+    tagArea: null,
     currentPosition: null,
     tagNumber: '123',
     fishType: 'Permit',
     tagDate: '02/28/2002',
     tagLocation: '87.90 -123.33',
-    tagArea: 'Key Largo, FL',
+    message: 'Loading location...',
     comment: 'good fish',
     guideName: 'some guide',
     fishLength: '30',
@@ -65,30 +72,42 @@ export default class HomeScreen extends React.Component {
             if (area.length) {
               const { city, region, country } = area[0];
               locatedArea = city + ', ' + region + ', ' + country;
-              this.setState({ area: locatedArea });
+              this.setState({ tagArea: locatedArea });
             }
           });
         }
-        this.setState({ location: latLong });
+        this.setState({
+          location: latLong,
+          message: 'Please enter the required tag report data',
+        });
       })
       .catch(e => console.log(e));
   };
 
   createTagReport = async () => {
-    const { name, description, city, location, area, user } = this.state;
+    const {
+      comment,
+      tagNumber,
+      fishType,
+      fishLength,
+      location,
+      tagArea,
+      user,
+    } = this.state;
     const { phone_number, email } = user;
     const todaysDate = moment().format('dddd, MMMM Do YYYY, h:mm:ss a');
 
     const tagReport = {
-      tagNumber: '123',
-      fishType: 'Bone',
+      fishLength,
+      tagNumber,
+      tagArea,
+      email,
+      fishType,
+      comment,
       tagDate: todaysDate,
       tagLocation: location,
-      tagArea: area,
-      comment: 'double digitsss',
+
       guideName: user['custom:firstName'],
-      fishLength: '30',
-      email: email,
       phone: phone_number,
     };
 
@@ -105,14 +124,14 @@ export default class HomeScreen extends React.Component {
     // });
 
     try {
-      await API.graphql(
-        graphqlOperation(mutations.createTagReports, {
-          input: tagReport,
-        }),
-      );
+      // await API.graphql(
+      //   graphqlOperation(mutations.createTagReports, {
+      //     input: tagReport,
+      //   }),
+      // );
       console.log('item created!');
       this.setState({
-        area: 'Tag successfully submitted!',
+        message: 'Tag successfully submitted!',
       });
     } catch (err) {
       console.log('error creating tarReport...', err);
@@ -128,26 +147,45 @@ export default class HomeScreen extends React.Component {
 
   render() {
     let text,
-      area = 'Locating.....';
+      message = 'Locating.....';
     if (this.state.errorMessage) {
       text = this.state.errorMessage;
     } else if (this.state.location) {
       text = this.state.location;
-      area = this.state.area;
+      message = this.state.message;
     }
 
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <Text style={styles.paragraph}>{text}</Text>
-        <Text style={styles.paragraph}>{area}</Text>
+        <Text style={styles.paragraph}>{this.state.tagArea}</Text>
+        <Text style={styles.paragraph}>{message}</Text>
 
+        <TextInput
+          style={styles.textInput}
+          onChangeText={v => this.onChange('tagNumber', v)}
+          value={this.state.tagNumber}
+          placeholder=" Tag Number"
+        />
+        <TextInput
+          style={styles.textInput}
+          onChangeText={v => this.onChange('fishLength', v)}
+          value={this.state.fishLength}
+          placeholder="Fish Length"
+        />
+        <TextInput
+          style={styles.textInput}
+          onChangeText={v => this.onChange('comment', v)}
+          value={this.state.comment}
+          placeholder=" Comment"
+        />
         <TouchableOpacity
           onPress={() => this.createTagReport()}
           style={styles.buttonStyle}
         >
           <Text style={styles.buttonText}>Submit Tag Report</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     );
   }
 }
@@ -176,5 +214,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  textInput: {
+    height: 50,
+    margin: 5,
+    width: 300,
+    backgroundColor: '#ddd',
+    padding: 5,
   },
 });
