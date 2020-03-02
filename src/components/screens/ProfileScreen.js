@@ -1,25 +1,43 @@
 import React from 'react';
 import { StyleSheet, View, Text, SafeAreaView } from 'react-native';
-import Amplify, { API, graphqlOperation } from 'aws-amplify';
+import { API, graphqlOperation } from 'aws-amplify';
 
 import * as queries from '../../graphql/queries';
 
 export default class ProfileScreen extends React.Component {
-  state = { name: '', description: '', tagReports: [] };
+  state = { tagReports: [] };
 
-  getTagReports = async () => {
-    const allTagReports = await API.graphql(
-      graphqlOperation(queries.listTagReportss),
-    );
-    this.setState({ tagReports: allTagReports.data.listTagReportss.items });
-  };
+  componentDidUpdate(prevProps) {
+    if (prevProps.isFocused !== this.props.isFocused) {
+      this.getTagReports();
+    }
+  }
 
   async componentDidMount() {
+    const { navigation } = this.props;
+    this.focusListener = navigation.addListener('didFocus', async () => {
+      await this.loadTagReports();
+    });
+
+    await this.loadTagReports();
+  }
+
+  async loadTagReports() {
     try {
-      this.getTagReports();
-    } catch (e) {
-      console.log(`error${e}`);
+      const tagReports = await API.graphql(
+        graphqlOperation(queries.listTagReportss),
+      );
+
+      this.setState({
+        tagReports: tagReports.data.listTagReportss.items,
+      });
+    } catch (err) {
+      console.log('error fetching tagReports...', err);
     }
+  }
+
+  componentWillUnmount() {
+    this.focusListener.remove();
   }
 
   render() {
@@ -31,15 +49,16 @@ export default class ProfileScreen extends React.Component {
     return (
       <SafeAreaView style={styles.container}>
         {this.state.tagReports.map((tagReport, index) => (
-          <View key={index} style={styles.item}>
-            <Text style={styles.name}>{tagReport.comment}</Text>
-            <Text style={styles.name}>{tagReport.fishType}</Text>
+          <View key={index} style={styles.tagReportContainer}>
+            <Text style={styles.textStyle}>{tagReport.comment}</Text>
+            <Text style={styles.textStyle}>{tagReport.fishType}</Text>
           </View>
         ))}
       </SafeAreaView>
     );
   }
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

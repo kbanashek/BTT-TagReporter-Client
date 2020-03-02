@@ -1,10 +1,10 @@
 {
   "devToolsPort": 19002,
-  "expoServerPort": 19000,
-  "packagerPort": 19004,
-  "packagerPid": 34858,
-  "expoServerNgrokUrl": "https://ik-22d.kbanashek.btt-tagreporter-client.exp.direct",
-  "packagerNgrokUrl": "https://packager.ik-22d.kbanashek.btt-tagreporter-client.exp.direct",
-  "ngrokPid": 34913,
+  "expoServerPort": null,
+  "packagerPort": null,
+  "packagerPid": null,
+  "expoServerNgrokUrl": null,
+  "packagerNgrokUrl": null,
+  "ngrokPid": null,
   "webpackServerPort": null
 }
