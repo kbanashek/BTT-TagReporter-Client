@@ -206,6 +206,7 @@ export default class App extends React.Component {
 
   handleConnectionChange = isConnected => {
     this.setState({ status: isConnected });
+    console.log(`Connection type: ${isConnected.type}`);
     console.log(`this.state.status: ${this.state.status}`);
   };
 

@@ -12,6 +12,11 @@ import Constants from 'expo-constants';
 import * as Location from 'expo-location';
 import * as Permissions from 'expo-permissions';
 import moment from 'moment';
+import RadioForm, {
+  RadioButton,
+  RadioButtonInput,
+  RadioButtonLabel,
+} from 'react-native-simple-radio-button';
 
 import * as mutations from '../../graphql/mutations';
 
@@ -23,7 +28,8 @@ export default class HomeScreen extends React.Component {
     tagArea: null,
     currentPosition: null,
     tagNumber: '123',
-    fishType: 'Permit',
+    fishType: null,
+    fishTypeX: -1,
     tagDate: '02/28/2002',
     tagLocation: '87.90 -123.33',
     message: 'Loading location...',
@@ -106,7 +112,6 @@ export default class HomeScreen extends React.Component {
       comment,
       tagDate: todaysDate,
       tagLocation: location,
-
       guideName: user['custom:firstName'],
       phone: phone_number,
     };
@@ -116,12 +121,15 @@ export default class HomeScreen extends React.Component {
     // TODO  - perform an optimistic response to update the UI immediately
     // const restaurants = [...this.state.restaurants, restaurant];
 
-    // this.setState({
-    //   restaurants,
-    //   name: '',
-    //   description: '',
-    //   city: '',
-    // });
+    this.refs.radioForm.updateIsActiveIndex(-1);
+
+    this.setState({
+      fishLength: null,
+      tagNumber: null,
+      tagArea: null,
+      fishType: 0,
+      comment: null,
+    });
 
     try {
       // await API.graphql(
@@ -145,6 +153,11 @@ export default class HomeScreen extends React.Component {
     this.setState({ [key]: value });
   };
 
+  radio_props = [
+    { label: 'Bonefish    ', value: 'bonefish' },
+    { label: 'Permit      ', value: 'permit' },
+  ];
+
   render() {
     let text,
       message = 'Locating.....';
@@ -161,6 +174,21 @@ export default class HomeScreen extends React.Component {
         <Text style={styles.paragraph}>{this.state.tagArea}</Text>
         <Text style={styles.paragraph}>{message}</Text>
 
+        <RadioForm
+          ref="radioForm"
+          radio_props={this.radio_props}
+          initial={this.state.fishType}
+          formHorizontal={true}
+          labelHorizontal={true}
+          buttonColor={'#2196f3'}
+          animation={true}
+          buttonSize={20}
+          buttonOuterSize={30}
+          labelStyle={{ fontSize: 15 }}
+          onPress={value => {
+            this.setState({ fishType: value });
+          }}
+        />
         <TextInput
           style={styles.textInput}
           onChangeText={v => this.onChange('tagNumber', v)}
@@ -179,6 +207,7 @@ export default class HomeScreen extends React.Component {
           value={this.state.comment}
           placeholder=" Comment"
         />
+
         <TouchableOpacity
           onPress={() => this.createTagReport()}
           style={styles.buttonStyle}
