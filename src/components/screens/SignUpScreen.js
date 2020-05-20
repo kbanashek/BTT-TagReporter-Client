@@ -12,11 +12,16 @@ import {
   Alert,
   Modal,
   FlatList,
-  Animated,
+  Animated
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Container, Item, Input } from 'native-base';
 import Auth from '@aws-amplify/auth';
+import RadioForm, {
+  RadioButton,
+  RadioButtonInput,
+  RadioButtonLabel
+} from 'react-native-simple-radio-button';
 import data from '../countriesData';
 const logo = require('../images/site-logo.png');
 
@@ -35,26 +40,64 @@ export default class SignUpScreen extends React.Component {
     isHidden: false,
     flag: defaultFlag,
     modalVisible: false,
+    preferredMeasure: '',
     authCode: '',
     firstName: '',
     lastName: '',
+    isSignUpDisabled: true,
+    isConfirmDisabled: true
   };
 
+  preferredMeasureSize = [
+    { label: 'Inches    ', value: 'in' },
+    { label: 'Centimeters      ', value: 'cm' }
+  ];
+
   onChangeText(key, value) {
-    this.setState({
-      [key]: value,
-    });
+    this.setState(
+      {
+        [key]: value
+      },
+      this.enableSignUp(),
+      this.enableConfirmSignUp()
+    );
   }
+
+  enableConfirmSignUp = () => {
+    const { authCode } = this.state;
+
+    const isConfirmDisabled = authCode ? true : false;
+
+    console.log('isConfirmDisabled' + isConfirmDisabled);
+
+    this.setState({
+      isConfirmDisabled
+    });
+
+    console.log('authCode' + authCode);
+  };
+
+  enableSignUp = () => {
+    const { firstName, lastName, email, password, phoneNumber } = this.state;
+    const allRequiredFields =
+      firstName && lastName && email && password && phoneNumber ? true : false;
+    console.log('allRequiredFields' + allRequiredFields.toString());
+
+    this.setState({
+      isSignUpDisabled: !allRequiredFields
+    });
+  };
 
   componentDidMount() {
     this.fadeIn();
+    //this.refs.radioForm.updateIsActiveIndex(1);
   }
 
   fadeIn() {
     Animated.timing(this.state.fadeIn, {
       toValue: 1,
       duration: 1000,
-      useNativeDriver: true,
+      useNativeDriver: true
     }).start();
     this.setState({ isHidden: true });
   }
@@ -63,7 +106,7 @@ export default class SignUpScreen extends React.Component {
     Animated.timing(this.state.fadeOut, {
       toValue: 0,
       duration: 1000,
-      useNativeDriver: true,
+      useNativeDriver: true
     }).start();
     this.setState({ isHidden: false });
   }
@@ -83,10 +126,10 @@ export default class SignUpScreen extends React.Component {
     const countryData = await data;
     try {
       const countryCode = await countryData.filter(
-        obj => obj.name === country,
+        obj => obj.name === country
       )[0].dial_code;
       const countryFlag = await countryData.filter(
-        obj => obj.name === country,
+        obj => obj.name === country
       )[0].flag;
       // Set data from user choice of country
       this.setState({ phoneNumber: countryCode, flag: countryFlag });
@@ -104,19 +147,21 @@ export default class SignUpScreen extends React.Component {
       phoneNumber,
       firstName,
       lastName,
+      preferredMeasure
     } = this.state;
-    // rename variable to conform with Amplify Auth field phone attribute
+
     const phone_number = phoneNumber;
 
     await Auth.signUp({
-      username,
+      username: email,
       password,
       attributes: {
         email,
         phone_number,
         'custom:firstName': firstName,
         'custom:lastName': lastName,
-      },
+        'custom:preferredMeasure': preferredMeasure
+      }
     })
       .then(() => {
         console.log('sign up successful!');
@@ -134,8 +179,8 @@ export default class SignUpScreen extends React.Component {
   }
 
   async confirmSignUp() {
-    const { username, authCode } = this.state;
-    await Auth.confirmSignUp(username, authCode)
+    const { email, authCode } = this.state;
+    await Auth.confirmSignUp(email, authCode)
       .then(() => {
         this.props.navigation.navigate('SignIn');
         console.log('Confirm sign up successful');
@@ -152,9 +197,15 @@ export default class SignUpScreen extends React.Component {
   }
 
   async resendSignUp() {
-    const { username } = this.state;
-    await Auth.resendSignUp(username)
-      .then(() => console.log('Confirmation code resent successfully'))
+    const { email } = this.state;
+    await Auth.resendSignUp(email)
+      .then(() =>
+        Alert.alert(
+          'A confirmation code has been resent to the provided email address',
+          'Success'
+        )
+      )
+
       .catch(err => {
         if (!err.message) {
           console.log('Error requesting new confirmation code: ', err);
@@ -171,28 +222,18 @@ export default class SignUpScreen extends React.Component {
     const countryData = data;
     return (
       <SafeAreaView style={styles.container}>
-        <StatusBar />
+       
         <KeyboardAvoidingView
           style={styles.container}
-          behavior="padding"
-          enabled
+          behavior={Platform.OS === "ios" ? "padding" : null}
+          style={{ flex: 1 }}
+         
         >
           <TouchableWithoutFeedback
             style={styles.container}
             onPress={Keyboard.dismiss}
           >
             <View style={styles.container}>
-              {/* App Logo */}
-              <View style={styles.logoContainer}>
-                {isHidden ? (
-                  <Animated.Image source={logo} style={{ opacity: fadeIn }} />
-                ) : (
-                  <Animated.Image
-                    source={logo}
-                    style={{ opacity: fadeOut, width: 110.46, height: 117 }}
-                  />
-                )}
-              </View>
               <Container style={styles.infoContainer}>
                 <View style={styles.container}>
                   <Item style={styles.itemStyle}>
@@ -202,8 +243,9 @@ export default class SignUpScreen extends React.Component {
                       placeholder="First Name"
                       placeholderTextColor="#adb4bc"
                       returnKeyType="next"
-                      keyboardType={'phone-pad'}
-                      autoCapitalize="none"
+                      ref="SecondInput"
+                      keyboardType={'default'}
+                      autoCapitalize="words"
                       autoCorrect={false}
                       onChangeText={value =>
                         this.onChangeText('firstName', value)
@@ -214,29 +256,49 @@ export default class SignUpScreen extends React.Component {
                       onFocus={() => this.fadeOut()}
                       onEndEditing={() => this.fadeIn()}
                     />
-                  </Item>
 
-                  <Item style={styles.itemStyle}>
-                    <Ionicons name="ios-person" style={styles.iconStyle} />
                     <Input
                       style={styles.input}
-                      placeholder="Username"
+                      placeholder="Last Name"
+                      placeholderTextColor="#adb4bc"
+                      returnKeyType="next"
+                      keyboardType={'default'}
+                      autoCapitalize="words"
+                      autoCorrect={false}
+                      ref="SecondInput"
+                      onChangeText={value =>
+                        this.onChangeText('lastName', value)
+                      }
+                      onSubmitEditing={event => {
+                        this.refs.ThirdInput._root.focus();
+                      }}
+                      onFocus={() => this.fadeOut()}
+                      onEndEditing={() => this.fadeIn()}
+                    />
+                  </Item>
+
+                  {/* email section */}
+                  <Item style={styles.itemStyle}>
+                    <Ionicons name="ios-mail" style={styles.iconStyle} />
+                    <Input
+                      style={styles.input}
+                      placeholder="Email"
                       placeholderTextColor="#adb4bc"
                       keyboardType={'email-address'}
                       returnKeyType="next"
                       autoCapitalize="none"
                       autoCorrect={false}
+                      secureTextEntry={false}
+                      ref="ThirdInput"
                       onSubmitEditing={event => {
-                        this.refs.ThirdInput._root.focus();
+                        this.refs.Third._root.focus();
                       }}
-                      onChangeText={value =>
-                        this.onChangeText('username', value)
-                      }
-                      ref="SecondInput"
+                      onChangeText={value => this.onChangeText('email', value)}
                       onFocus={() => this.fadeOut()}
                       onEndEditing={() => this.fadeIn()}
                     />
                   </Item>
+
                   {/*  password section  */}
                   <Item style={styles.itemStyle}>
                     <Ionicons name="ios-lock" style={styles.iconStyle} />
@@ -259,33 +321,13 @@ export default class SignUpScreen extends React.Component {
                       onEndEditing={() => this.fadeIn()}
                     />
                   </Item>
-                  {/* email section */}
-                  <Item style={styles.itemStyle}>
-                    <Ionicons name="ios-mail" style={styles.iconStyle} />
-                    <Input
-                      style={styles.input}
-                      placeholder="Email"
-                      placeholderTextColor="#adb4bc"
-                      keyboardType={'email-address'}
-                      returnKeyType="next"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      secureTextEntry={false}
-                      ref="FourthInput"
-                      onSubmitEditing={event => {
-                        this.refs.Fifth._root.focus();
-                      }}
-                      onChangeText={value => this.onChangeText('email', value)}
-                      onFocus={() => this.fadeOut()}
-                      onEndEditing={() => this.fadeIn()}
-                    />
-                  </Item>
+
                   {/* phone section  */}
                   <Item style={styles.itemStyle}>
                     <Ionicons name="ios-call" style={styles.iconStyle} />
                     {/* country flag */}
                     <View>
-                      <Text style={{ fontSize: 40 }}>{flag}</Text>
+                      <Text style={{ fontSize: 30 }}>{flag}</Text>
                     </View>
                     {/* open modal */}
                     <Ionicons
@@ -327,7 +369,7 @@ export default class SignUpScreen extends React.Component {
                           style={{
                             flex: 10,
                             paddingTop: 80,
-                            backgroundColor: '#0B7EA0',
+                            backgroundColor: '#0B7EA0'
                           }}
                         >
                           <FlatList
@@ -343,14 +385,23 @@ export default class SignUpScreen extends React.Component {
                                     {
                                       flexDirection: 'row',
                                       alignItems: 'center',
-                                      justifyContent: 'space-between',
-                                    },
+                                      justifyContent: 'space-between'
+                                    }
                                   ]}
                                 >
-                                  <Text style={{ fontSize: 45 }}>
+                                  <Text
+                                    style={{
+                                      fontSize: 25
+                                    }}
+                                  >
                                     {item.flag}
                                   </Text>
-                                  <Text style={{ fontSize: 20, color: '#fff' }}>
+                                  <Text
+                                    style={{
+                                      fontSize: 20,
+                                      color: '#fff'
+                                    }}
+                                  >
                                     {item.name} ({item.dial_code})
                                   </Text>
                                 </View>
@@ -367,10 +418,37 @@ export default class SignUpScreen extends React.Component {
                       </View>
                     </Modal>
                   </Item>
-                  {/* End of phone input */}
+                  <View style={{paddingBottom:10, paddingTop:10}}>
+                    {/* <Text style={{ fontSize: 15, color: 'white' }}>Preferred Measurement</Text> */}
+                    <RadioForm
+                      ref="radioForm"
+                      radio_props={this.preferredMeasureSize}
+                      initial={this.preferredMeasureSize[0]}
+                      formHorizontal={true}
+                      labelHorizontal={true}
+                      buttonColor={'#2196f3'}
+                      animation={true}
+                      buttonSize={20}
+                      buttonOuterSize={30}
+                      labelStyle={{ fontSize: 15, color: 'white' }}
+                      onPress={value => {
+                        this.setState({ preferredMeasure: value });
+                      }}
+                    />
+                  </View>
+
                   <TouchableOpacity
                     onPress={() => this.signUp()}
-                    style={styles.buttonStyle}
+                    style={[
+                      styles.buttonStyle,
+                      {
+                        backgroundColor: this.state.isSignUpDisabled
+                          ? '#607D8B'
+                          : '#009688'
+                      }
+                    ]}
+                    activeOpacity={0.5}
+                    disabled={this.state.isSignUpDisabled}
                   >
                     <Text style={styles.buttonText}>Sign Up</Text>
                   </TouchableOpacity>
@@ -395,13 +473,32 @@ export default class SignUpScreen extends React.Component {
                   </Item>
                   <TouchableOpacity
                     onPress={() => this.confirmSignUp()}
-                    style={styles.buttonStyle}
+                    style={[
+                      styles.buttonStyle,
+                      {
+                        backgroundColor: this.state.isSignUpDisabled
+                          ? '#607D8B'
+                          : '#009688'
+                      }
+                    ]}
+                    activeOpacity={0.5}
+                    disabled={this.state.isSignUpDisabled}
                   >
                     <Text style={styles.buttonText}>Confirm Sign Up</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => this.resendSignUp()}
                     style={styles.buttonStyle}
+                    style={[
+                      styles.buttonStyle,
+                      {
+                        backgroundColor: this.state.isConfirmDisabled
+                          ? '#607D8B'
+                          : '#009688'
+                      }
+                    ]}
+                    activeOpacity={0.5}
+                    disabled={this.state.isConfirmDisabled}
                   >
                     <Text style={styles.buttonText}>Resend code</Text>
                   </TouchableOpacity>
@@ -420,44 +517,50 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0B7EA0',
     justifyContent: 'center',
-    flexDirection: 'column',
+    flexDirection: 'column'
   },
   input: {
     flex: 1,
     fontSize: 17,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#fff'
+  },
+  radio: {
+    flex: 1,
+    flexDirection: 'row'
   },
   infoContainer: {
     position: 'absolute',
     left: 0,
     right: 0,
-    height: 370,
-    bottom: 25,
+    height: 570,
+    top:20,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 30,
-    backgroundColor: '#0B7EA0',
+    backgroundColor: '#0B7EA0'
   },
   itemStyle: {
-    marginBottom: 10,
+    marginBottom: 10
   },
   iconStyle: {
     color: '#fff',
-    fontSize: 28,
-    marginRight: 15,
+    fontSize: 18,
+    marginRight: 15
   },
   buttonStyle: {
     alignItems: 'center',
-    backgroundColor: '#727b7a',
+    backgroundColor: '#00BCB4',
     padding: 14,
     marginBottom: 10,
-    borderRadius: 3,
+    borderRadius: 4,
+   
   },
   buttonText: {
-    fontSize: 18,
     fontWeight: 'bold',
+    fontSize: 21,
+    padding: 2,
     color: '#fff',
   },
   logoContainer: {
@@ -468,25 +571,25 @@ const styles = StyleSheet.create({
     bottom: 270,
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
+    flex: 1
   },
   textStyle: {
     padding: 5,
     fontSize: 20,
     color: '#fff',
-    fontWeight: 'bold',
+    fontWeight: 'bold'
   },
   countryStyle: {
     flex: 1,
     backgroundColor: '#0B7EA0',
     borderTopColor: '#211f',
     borderTopWidth: 1,
-    padding: 12,
+    padding: 12
   },
   closeButtonStyle: {
     flex: 1,
     padding: 12,
     alignItems: 'center',
-    backgroundColor: '#727b7a',
-  },
+    backgroundColor: '#00BCB4'
+  }
 });

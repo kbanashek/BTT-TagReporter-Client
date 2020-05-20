@@ -10,7 +10,7 @@ import {
   Keyboard,
   View,
   Alert,
-  Animated,
+  Animated
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -30,7 +30,7 @@ export default class ForgetPasswordScreen extends React.Component {
     newPassword: '',
     fadeIn: new Animated.Value(0), // Initial value for opacity: 0
     fadeOut: new Animated.Value(1), // Initial value for opacity: 1
-    isHidden: false,
+    isHidden: false
   };
   componentDidMount() {
     this.fadeIn();
@@ -39,7 +39,7 @@ export default class ForgetPasswordScreen extends React.Component {
     Animated.timing(this.state.fadeIn, {
       toValue: 1,
       duration: 1000,
-      useNativeDriver: true,
+      useNativeDriver: true
     }).start();
     this.setState({ isHidden: true });
   }
@@ -47,13 +47,13 @@ export default class ForgetPasswordScreen extends React.Component {
     Animated.timing(this.state.fadeOut, {
       toValue: 0,
       duration: 1000,
-      useNativeDriver: true,
+      useNativeDriver: true
     }).start();
     this.setState({ isHidden: false });
   }
   onChangeText(key, value) {
     this.setState({
-      [key]: value,
+      [key]: value
     });
   }
   // Request a new password
@@ -93,7 +93,6 @@ export default class ForgetPasswordScreen extends React.Component {
     let { fadeOut, fadeIn, isHidden } = this.state;
     return (
       <SafeAreaView style={styles.container}>
-        <StatusBar />
         <KeyboardAvoidingView
           style={styles.container}
           behavior="padding"
@@ -107,17 +106,7 @@ export default class ForgetPasswordScreen extends React.Component {
             <View style={styles.container}>
               {/* App Logo */}
               <View style={styles.logoContainer}>
-                {isHidden ? (
-                  <Animated.Image
-                    source={logo}
-                    style={{ opacity: fadeIn, width: 160, height: 167 }}
-                  />
-                ) : (
-                  <Animated.Image
-                    source={logo}
-                    style={{ opacity: fadeOut, width: 160, height: 167 }}
-                  />
-                )}
+                <Animated.Image source={logo} />
               </View>
               {/* Infos */}
               <Container style={styles.infoContainer}>
@@ -192,7 +181,7 @@ export default class ForgetPasswordScreen extends React.Component {
                     style={styles.buttonStyle}
                   >
                     <Text style={styles.buttonText}>
-                      Confirm the new password
+                      Confirm Password Update
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -209,13 +198,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0B7EA0',
     justifyContent: 'center',
-    flexDirection: 'column',
+    flexDirection: 'column'
   },
   input: {
     flex: 1,
     fontSize: 17,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#fff'
   },
   infoContainer: {
     position: 'absolute',
@@ -227,27 +216,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 30,
-    backgroundColor: '#0B7EA0',
+    backgroundColor: '#0B7EA0'
   },
   itemStyle: {
-    marginBottom: 20,
+    marginBottom: 20
   },
   iconStyle: {
     color: '#fff',
-    fontSize: 28,
-    marginRight: 15,
+    fontSize: 18,
+    marginRight: 15
   },
   buttonStyle: {
     alignItems: 'center',
-    backgroundColor: '#727b7a',
+    backgroundColor: '#00BCB4',
     padding: 14,
     marginBottom: 20,
-    borderRadius: 3,
+    borderRadius: 4,
+    width: 300
   },
   buttonText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#fff'
   },
   logoContainer: {
     position: 'absolute',
@@ -257,6 +247,6 @@ const styles = StyleSheet.create({
     bottom: 180,
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
-  },
+    flex: 1
+  }
 });

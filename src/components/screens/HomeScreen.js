@@ -5,8 +5,17 @@ import {
   Text,
   TouchableOpacity,
   TextInput,
-  SafeAreaView,
+  KeyboardAvoidingView,
+  Keyboard,
+  TouchableWithoutFeedback,
+  ScrollView,
+  Platform
 } from 'react-native';
+import { SafeAreaView, NavigationActions } from 'react-navigation';
+import { Container, Item, Input } from 'native-base';
+import { connect } from 'react-redux';
+import NetInfo from '@react-native-community/netinfo';
+import RNPickerSelect from 'react-native-picker-select';
 import { API, graphqlOperation, Auth } from 'aws-amplify';
 import Constants from 'expo-constants';
 import * as Location from 'expo-location';
@@ -15,30 +24,62 @@ import moment from 'moment';
 import RadioForm, {
   RadioButton,
   RadioButtonInput,
-  RadioButtonLabel,
+  RadioButtonLabel
 } from 'react-native-simple-radio-button';
+import { connectionState } from '../app/actions';
+import { IsConnected } from '../../components/network/IsConnected';
 
 import * as mutations from '../../graphql/mutations';
 
-export default class HomeScreen extends React.Component {
+class HomeScreen extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
   state = {
+    isConnected: true,
     user: null,
     location: null,
     errorMessage: null,
     tagArea: null,
     currentPosition: null,
-    tagNumber: '123',
+    tagNumber: '',
     fishType: null,
     fishTypeX: -1,
-    tagDate: '02/28/2002',
-    tagLocation: '87.90 -123.33',
+    tagDate: '',
+    tagLocation: '',
     message: 'Loading location...',
-    comment: 'good fish',
-    guideName: 'some guide',
-    fishLength: '30',
+    comment: '',
+    guideName: '',
+    fishLength: '',
+    tagLocationCode: '',
     email: 'kb@aol.com',
     phone: '9492443191',
+    isDisabled: false
   };
+
+  species = [
+    { label: 'Bonefish    ', value: 'bonefish' },
+    { label: 'Permit      ', value: 'permit' }
+  ];
+
+  locations = [
+    { label: 'US', value: 'BTT' },
+    { label: 'Belize', value: 'BZ' },
+    { label: 'Mexico', value: 'MX' },
+    { label: 'Bahamas', value: 'BA' }
+  ];
+
+  static navigationOptions = ({ navigation }) => ({
+    animationEnabled: true
+  });
+
+  componentWillUnmount() {
+    NetInfo.isConnected.removeEventListener(
+      'connectionChange',
+      this.handleConnectionChange
+    );
+  }
 
   async componentDidMount() {
     Auth.currentAuthenticatedUser()
@@ -48,12 +89,24 @@ export default class HomeScreen extends React.Component {
     if (Platform.OS === 'android' && !Constants.isDevice) {
       this.setState({
         errorMessage:
-          'Oops, this will not work on Sketch in an Android emulator. Try it on your device!',
+          'Oops, this will not work on Sketch in an Android emulator. Try it on your device!'
       });
+      this.setState({ tagArea: 'Key Largo, FL' });
     } else {
       await this.getLocation();
     }
+
+    NetInfo.isConnected.addEventListener(
+      'connectionChange',
+      this.handleConnectionChange
+    );
   }
+
+  handleConnectionChange = isConnected => {
+    this.setState({ isConnected });
+    console.log(`Connection type: ${isConnected.type}`);
+    console.log(`this.state.status: ${this.state.status}`);
+  };
 
   getLocation = async () => {
     let { status } = await Permissions.askAsync(Permissions.LOCATION);
@@ -61,7 +114,7 @@ export default class HomeScreen extends React.Component {
 
     if (status !== 'granted') {
       this.setState({
-        errorMessage: 'Permission to access location was denied',
+        errorMessage: 'Permission to access location was denied'
       });
     }
 
@@ -73,18 +126,19 @@ export default class HomeScreen extends React.Component {
         if (location.coords) {
           Location.reverseGeocodeAsync({
             longitude: location.coords.longitude,
-            latitude: location.coords.latitude,
+            latitude: location.coords.latitude
           }).then(area => {
             if (area.length) {
-              const { city, region, country } = area[0];
-              locatedArea = city + ', ' + region + ', ' + country;
+              const { city, region, country, name } = area[0];
+              const locatedArea = city + ', ' + region + ', ' + country;
+              console.log('location NAME:', name);
               this.setState({ tagArea: locatedArea });
             }
           });
         }
         this.setState({
           location: latLong,
-          message: 'Please enter the required tag report data',
+          message: 'Please enter the required tag report data'
         });
       })
       .catch(e => console.log(e));
@@ -99,21 +153,22 @@ export default class HomeScreen extends React.Component {
       location,
       tagArea,
       user,
+      tagLocationCode
     } = this.state;
+
     const { phone_number, email } = user;
-    const todaysDate = moment().format('dddd, MMMM Do YYYY, h:mm:ss a');
 
     const tagReport = {
-      fishLength,
-      tagNumber,
       tagArea,
       email,
       fishType,
       comment,
-      tagDate: todaysDate,
+      tagNumber: tagLocationCode + '-' + tagNumber,
+      tagDate: moment().format('dddd, MMMM Do YYYY, h:mm:ss a'),
       tagLocation: location,
-      guideName: user['custom:firstName'],
-      phone: phone_number,
+      fishLength: fishLength + ' ' + user['custom:preferredMeasure'],
+      guideName: user['custom:firstName'] + ' ' + user['custom:lastName'],
+      phone: phone_number
     };
 
     console.log(tagReport);
@@ -123,28 +178,19 @@ export default class HomeScreen extends React.Component {
 
     this.refs.radioForm.updateIsActiveIndex(-1);
 
-    this.setState({
-      fishLength: null,
-      tagNumber: null,
-      tagArea: null,
-      fishType: 0,
-      comment: null,
-    });
-
     try {
-      // await API.graphql(
-      //   graphqlOperation(mutations.createTagReports, {
-      //     input: tagReport,
-      //   }),
-      // );
-      console.log('item created!');
-      this.setState({
-        message: 'Tag successfully submitted!',
-      });
+      await API.graphql(
+        graphqlOperation(mutations.createTagReports, {
+          input: tagReport
+        })
+      );
+      console.log('DB not active - item created!');
+      this.props.updateConnectionState(true);
+      this.clearTagReportState();
     } catch (err) {
       console.log('error creating tarReport...', err);
       this.setState({
-        errorMessage: 'Unable to submit tag report',
+        errorMessage: 'Unable to submit tag report'
       });
     }
   };
@@ -153,14 +199,42 @@ export default class HomeScreen extends React.Component {
     this.setState({ [key]: value });
   };
 
-  radio_props = [
-    { label: 'Bonefish    ', value: 'bonefish' },
-    { label: 'Permit      ', value: 'permit' },
-  ];
+  clearTagReportState() {
+    this.setState({
+      message: 'Tag successfully submitted!',
+      fishLength: null,
+      tagNumber: null,
+      tagArea: null,
+      fishType: 0,
+      comment: null,
+      tagDate: null,
+      tagLocation: null,
+      tagLocationCode: null
+    });
+  }
+
+  renderLocationTag = () => {
+    const locationSelectPlaceHolder = {
+      label: 'Select tag region...',
+      value: null,
+      color: '#fff',
+      fontWeight: 'bold'
+    };
+
+    return (
+      <RNPickerSelect
+        placeholder={locationSelectPlaceHolder}
+        onValueChange={value => this.setState({ tagLocationCode: value })}
+        items={this.locations}
+        style={styles.input}
+      />
+    );
+  };
 
   render() {
     let text,
       message = 'Locating.....';
+
     if (this.state.errorMessage) {
       text = this.state.errorMessage;
     } else if (this.state.location) {
@@ -170,85 +244,161 @@ export default class HomeScreen extends React.Component {
 
     return (
       <SafeAreaView style={styles.container}>
-        <Text style={styles.paragraph}>{text}</Text>
-        <Text style={styles.paragraph}>{this.state.tagArea}</Text>
-        <Text style={styles.paragraph}>{message}</Text>
-
-        <RadioForm
-          ref="radioForm"
-          radio_props={this.radio_props}
-          initial={this.state.fishType}
-          formHorizontal={true}
-          labelHorizontal={true}
-          buttonColor={'#2196f3'}
-          animation={true}
-          buttonSize={20}
-          buttonOuterSize={30}
-          labelStyle={{ fontSize: 15 }}
-          onPress={value => {
-            this.setState({ fishType: value });
-          }}
-        />
-        <TextInput
-          style={styles.textInput}
-          onChangeText={v => this.onChange('tagNumber', v)}
-          value={this.state.tagNumber}
-          placeholder=" Tag Number"
-        />
-        <TextInput
-          style={styles.textInput}
-          onChangeText={v => this.onChange('fishLength', v)}
-          value={this.state.fishLength}
-          placeholder="Fish Length"
-        />
-        <TextInput
-          style={styles.textInput}
-          onChangeText={v => this.onChange('comment', v)}
-          value={this.state.comment}
-          placeholder=" Comment"
-        />
-
-        <TouchableOpacity
-          onPress={() => this.createTagReport()}
-          style={styles.buttonStyle}
-        >
-          <Text style={styles.buttonText}>Submit Tag Report</Text>
-        </TouchableOpacity>
+        <KeyboardAvoidingView>
+          <ScrollView>
+            <View style={styles.container}>
+              {this.getConnectionInfo()}
+              {this.renderLocation()}
+              <Text style={styles.paragraph}>{message}</Text>
+              <RadioForm
+                ref="radioForm"
+                radio_props={this.species}
+                initial={this.state.fishType}
+                formHorizontal={true}
+                labelHorizontal={true}
+                buttonColor={'#2196f3'}
+                animation={true}
+                buttonSize={20}
+                buttonOuterSize={30}
+                labelStyle={{ fontSize: 15, color: 'white' }}
+                onPress={value => {
+                  this.setState({ fishType: value });
+                }}
+              />
+              <View style={styles.dropDownInput}>
+                {this.renderLocationTag()}
+              </View>
+              <Item style={styles.itemStyle}>
+                <Input
+                  style={styles.input}
+                  placeholderTextColor="#adb4bc"
+                  onChangeText={v => this.onChange('tagNumber', v)}
+                  value={this.state.tagNumber}
+                  placeholder="Tag Number"
+                />
+              </Item>
+              <Item style={styles.itemStyle}>
+                <Input
+                  style={styles.input}
+                  placeholderTextColor="#adb4bc"
+                  onChangeText={v => this.onChange('fishLength', v)}
+                  value={this.state.fishLength}
+                  placeholder="Fish Length"
+                />
+              </Item>
+              <Item style={styles.itemStyle}>
+                <Input
+                  placeholderTextColor="#adb4bc"
+                  style={styles.textInput}
+                  onChangeText={v => this.onChange('comment', v)}
+                  value={this.state.comment}
+                  placeholder="Comment"
+                />
+              </Item>
+              <View style={styles.loginButtonSection}>
+                <TouchableOpacity
+                  onPress={() => this.createTagReport()}
+                  style={styles.buttonStyle}
+                  disabled={this.state.isDisabled}
+                >
+                  <Text style={styles.buttonText}>Submit Tag Report</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     );
   }
+
+  renderLocation = () => {
+    return this.state.tagArea ? (
+      <Text style={styles.location}>{this.state.tagArea}</Text>
+    ) : null;
+  };
+
+  getConnectionInfo = () => {
+    return !this.state.isConnected ? (
+      <IsConnected isConnected={this.state.isConnected} />
+    ) : null;
+  };
 }
+
+// const mapDispatchToProps = () => {
+//     connectionState;
+// };
+
+function mapDispatchToProps(dispatch) {
+  return {
+    updateConnectionState: status => dispatch(connectionState(status))
+  };
+}
+
+export default connect(null, mapDispatchToProps)(HomeScreen);
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: Constants.statusBarHeight,
-    backgroundColor: '#0B7EA0',
+    flexDirection: 'column',
+    backgroundColor: '#0B7EA0'
   },
   paragraph: {
-    margin: 24,
+    margin: 15,
     fontSize: 18,
     textAlign: 'center',
+    color: '#efefef'
+  },
+  location: {
+    margin: 15,
+    fontSize: 24,
+    textAlign: 'center',
+    color: '#efefef',
+    fontWeight: 'bold'
+  },
+  loginButtonSection: {
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   buttonStyle: {
     alignItems: 'center',
-    backgroundColor: '#727b7a',
+    backgroundColor: '#00BCB4',
     padding: 14,
-    marginBottom: 20,
-    borderRadius: 3,
+    marginTop: 20,
+    borderRadius: 4,
+    width: 350
+    //  left: Platform.OS == "ios" ? 15: 6,
   },
   buttonText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#fff'
   },
   textInput: {
-    height: 50,
-    margin: 5,
-    width: 300,
-    backgroundColor: '#ddd',
-    padding: 5,
+    flex: 1,
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: '#fff'
   },
+  input: {
+    flex: 1,
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: '#fff'
+  },
+  itemStyle: {
+    marginBottom: 10
+  },
+  dropDownInput: {
+    height: 55,
+    margin: 5,
+    width: 380,
+    borderColor: '#efefef',
+    borderWidth: .5,
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: '#fff'
+  }
 });

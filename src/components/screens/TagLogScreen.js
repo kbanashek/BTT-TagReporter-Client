@@ -1,10 +1,10 @@
 import React from 'react';
-import { StyleSheet, View, Text, SafeAreaView } from 'react-native';
+import { StyleSheet, View, Text, SafeAreaView, StatusBar } from 'react-native';
 import { API, graphqlOperation } from 'aws-amplify';
 
 import * as queries from '../../graphql/queries';
 
-export default class ProfileScreen extends React.Component {
+export default class TagLogScreen extends React.Component {
   state = { tagReports: [] };
 
   componentDidUpdate(prevProps) {
@@ -63,8 +63,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0B7EA0',
-    alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'column',
   },
   textStyle: {
     fontWeight: 'bold',

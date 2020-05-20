@@ -5,13 +5,14 @@ import {
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  SafeAreaView,
+  Image,
   StatusBar,
   KeyboardAvoidingView,
   Keyboard,
   Alert,
   Animated,
 } from 'react-native';
+import { SafeAreaView } from 'react-navigation'
 
 import { Ionicons } from '@expo/vector-icons';
 
@@ -27,18 +28,24 @@ export default class SignInScreen extends React.Component {
     fadeIn: new Animated.Value(0),
     fadeOut: new Animated.Value(0),
     isHidden: false,
+    isSignInDisabled: true,
   };
+
+  
   componentDidMount() {
     this.fadeIn();
+    //this.refs.radioForm.updateIsActiveIndex(1);
   }
+
   fadeIn() {
     Animated.timing(this.state.fadeIn, {
       toValue: 1,
       duration: 1000,
-      useNativeDriver: true,
+      useNativeDriver: true
     }).start();
     this.setState({ isHidden: true });
   }
+
   fadeOut() {
     Animated.timing(this.state.fadeOut, {
       toValue: 1,
@@ -47,10 +54,18 @@ export default class SignInScreen extends React.Component {
     }).start();
     this.setState({ isHidden: false });
   }
+
   onChangeText(key, value) {
     this.setState({
       [key]: value,
     });
+
+    const { username, password } = this.state;
+    username && password
+      ? this.setState({
+          isSignInDisabled: false,
+        })
+      : null;
   }
 
   async signIn() {
@@ -74,11 +89,11 @@ export default class SignInScreen extends React.Component {
     let { fadeOut, fadeIn, isHidden } = this.state;
     return (
       <SafeAreaView style={styles.container}>
-        <StatusBar />
+        
         <KeyboardAvoidingView
           style={styles.container}
-          behavior="padding"
-          enabled
+          behavior={Platform.OS === "ios" ? "padding" : null}
+          style={{ flex: 1 }}
         >
           <TouchableWithoutFeedback
             style={styles.container}
@@ -87,18 +102,11 @@ export default class SignInScreen extends React.Component {
             <View style={styles.container}>
               <View style={styles.logoContainer}>
                 {isHidden ? (
-                  <Animated.Image
-                    source={logo}
-                    style={{
-                      opacity: fadeIn,
-                      width: 172,
-                      height: 81,
-                    }}
-                  />
+                   <Image source={logo} style={{ width: 252, height: 101 }} />
                 ) : (
                   <Animated.Image
                     source={logo}
-                    style={{ opacity: fadeOut, width: 172, height: 81 }}
+                    style={{ opacity: fadeOut, width: 172, height: 81  }}
                   />
                 )}
               </View>
@@ -108,7 +116,7 @@ export default class SignInScreen extends React.Component {
                     <Ionicons name="ios-person" style={styles.iconStyle} />
                     <Input
                       style={styles.input}
-                      placeholder="Username"
+                      placeholder="Email"
                       placeholderTextColor="#adb4bc"
                       keyboardType={'email-address'}
                       returnKeyType="next"
@@ -144,10 +152,22 @@ export default class SignInScreen extends React.Component {
                   </Item>
                   <TouchableOpacity
                     onPress={() => this.signIn()}
-                    style={styles.buttonStyle}
+                    style={[
+                      styles.buttonStyle,
+                      {
+                        backgroundColor: this.state.isSignUpDisabled
+                          ? '#607D8B'
+                          : '#009688',
+                      },
+                    ]}
+                    activeOpacity={0.5}
+                    disabled={this.state.isSignInDisabled}
                   >
                     <Text style={styles.buttonText}>Sign In</Text>
                   </TouchableOpacity>
+                  <Text style={styles.forgotPasswordText}>
+                    Forgot Password?
+                  </Text>
                 </View>
               </Container>
             </View>
@@ -192,25 +212,32 @@ const styles = StyleSheet.create({
   },
   buttonStyle: {
     alignItems: 'center',
-    backgroundColor: '#727b7a',
+    backgroundColor: '#00BCB4',
     padding: 14,
     marginBottom: 20,
-    borderRadius: 3,
+    borderRadius: 4,
+   
   },
   buttonText: {
-    fontSize: 18,
     fontWeight: 'bold',
+    fontSize: 24,
+    padding: 2,
+    color: '#fff',
+  },
+  forgotPasswordText: {
+    fontSize: 12,
+    fontWeight: 'normal',
     color: '#fff',
   },
   logoContainer: {
     position: 'absolute',
     left: 0,
     right: 0,
-    height: 150,
-    bottom: 425,
-    flexDirection: 'row',
-    justifyContent: 'center',
+    height: 400,
+    bottom: 180,
+    
     alignItems: 'center',
-    paddingHorizontal: 30,
+   // justifyContent: 'center',
+    flex: 1,
   },
 });

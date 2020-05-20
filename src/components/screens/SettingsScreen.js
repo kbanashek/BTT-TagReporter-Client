@@ -47,6 +47,7 @@ export default class SettingsScreen extends React.Component {
         }
       });
   };
+
   // Sign out from the app
   signOutAlert = async () => {
     await Alert.alert(
@@ -63,6 +64,7 @@ export default class SettingsScreen extends React.Component {
       { cancelable: false },
     );
   };
+
   signOut = async () => {
     await Auth.signOut()
       .then(() => {
@@ -71,10 +73,10 @@ export default class SettingsScreen extends React.Component {
       })
       .catch(err => console.log('Error while signing out!', err));
   };
+
   render() {
     return (
       <SafeAreaView style={styles.container}>
-        <StatusBar />
         <KeyboardAvoidingView
           style={styles.container}
           behavior="padding"
@@ -202,10 +204,11 @@ const styles = StyleSheet.create({
   },
   buttonStyle: {
     alignItems: 'center',
-    backgroundColor: '#727b7a',
+    backgroundColor: '#00BCB4',
     padding: 14,
     marginTop: 20,
-    borderRadius: 3,
+    borderRadius: 4,
+    width: 300
   },
   buttonText: {
     fontSize: 18,
