@@ -1,40 +1,58 @@
 import React from 'react';
 import {
   StyleSheet,
-  View,
   Text,
+  View,
+  TextInput,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   Image,
-  StatusBar,
-  KeyboardAvoidingView,
+  ScrollView,
   Keyboard,
-  Alert,
+  Dimensions,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
   Animated,
+  Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-navigation'
-
-import { Ionicons } from '@expo/vector-icons';
-
-import { Container, Item, Input } from 'native-base';
-
 import Auth from '@aws-amplify/auth';
-const logo = require('../images/site-logo.png');
 
-export default class SignInScreen extends React.Component {
+const logo = require('../images/site-logo.png');
+export const { width, height } = Dimensions.get('window');
+
+export default class App extends React.Component {
   state = {
+    screenWidth: 0,
+    containerHeight: 0,
+    showImage: true,
     username: '',
     password: '',
     fadeIn: new Animated.Value(0),
     fadeOut: new Animated.Value(0),
     isHidden: false,
-    isSignInDisabled: true,
+    isSignInDisabled: true
   };
 
-  
-  componentDidMount() {
-    this.fadeIn();
-    //this.refs.radioForm.updateIsActiveIndex(1);
+  componentDidMount = () => {
+    const headerHeight = 78;
+    this.keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      ({ endCoordinates }) =>
+        this.setState({
+          containerHeight: height - endCoordinates.height - headerHeight,
+          showImage: false
+        })
+    );
+    this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () =>
+      this.setState({
+        containerHeight: height - headerHeight,
+        showImage: true
+      })
+    );
+  };
+
+  componentWillUnmount() {
+    this.keyboardDidShowListener.remove();
+    this.keyboardDidHideListener.remove();
   }
 
   fadeIn() {
@@ -50,22 +68,21 @@ export default class SignInScreen extends React.Component {
     Animated.timing(this.state.fadeOut, {
       toValue: 1,
       duration: 1000,
-      useNativeDriver: true,
+      useNativeDriver: true
     }).start();
     this.setState({ isHidden: false });
   }
 
   onChangeText(key, value) {
     this.setState({
-      [key]: value,
+      [key]: value
     });
 
     const { username, password } = this.state;
-    username && password
-      ? this.setState({
-          isSignInDisabled: false,
-        })
-      : null;
+       this.setState({
+          isSignInDisabled: username && password ? false: true
+        });
+       
   }
 
   async signIn() {
@@ -85,159 +102,136 @@ export default class SignInScreen extends React.Component {
         }
       });
   }
+
   render() {
-    let { fadeOut, fadeIn, isHidden } = this.state;
+    const { showImage } = this.state;
+
     return (
-      <SafeAreaView style={styles.container}>
-        
-        <KeyboardAvoidingView
-          style={styles.container}
-          behavior={Platform.OS === "ios" ? "padding" : null}
-          style={{ flex: 1 }}
-        >
-          <TouchableWithoutFeedback
-            style={styles.container}
-            onPress={Keyboard.dismiss}
-          >
-            <View style={styles.container}>
-              <View style={styles.logoContainer}>
-                {isHidden ? (
-                   <Image source={logo} style={{ width: 252, height: 101 }} />
-                ) : (
-                  <Animated.Image
-                    source={logo}
-                    style={{ opacity: fadeOut, width: 172, height: 81  }}
-                  />
-                )}
-              </View>
-              <Container style={styles.infoContainer}>
-                <View style={styles.container}>
-                  <Item style={styles.itemStyle}>
-                    <Ionicons name="ios-person" style={styles.iconStyle} />
-                    <Input
-                      style={styles.input}
-                      placeholder="Email"
-                      placeholderTextColor="#adb4bc"
-                      keyboardType={'email-address'}
-                      returnKeyType="next"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      onSubmitEditing={event => {
-                        this.refs.SecondInput._root.focus();
-                      }}
-                      onChangeText={value =>
-                        this.onChangeText('username', value)
-                      }
-                      onFocus={() => this.fadeOut()}
-                      onEndEditing={() => this.fadeIn()}
-                    />
-                  </Item>
-                  <Item style={styles.itemStyle}>
-                    <Ionicons style={styles.iconStyle} name="ios-lock" />
-                    <Input
-                      style={styles.input}
-                      placeholder="Password"
-                      placeholderTextColor="#adb4bc"
-                      returnKeyType="go"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      secureTextEntry={true}
-                      ref="SecondInput"
-                      onChangeText={value =>
-                        this.onChangeText('password', value)
-                      }
-                      onFocus={() => this.fadeOut()}
-                      onEndEditing={() => this.fadeIn()}
-                    />
-                  </Item>
-                  <TouchableOpacity
-                    onPress={() => this.signIn()}
-                    style={[
-                      styles.buttonStyle,
-                      {
-                        backgroundColor: this.state.isSignUpDisabled
-                          ? '#607D8B'
-                          : '#009688',
-                      },
-                    ]}
-                    activeOpacity={0.5}
-                    disabled={this.state.isSignInDisabled}
-                  >
-                    <Text style={styles.buttonText}>Sign In</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.forgotPasswordText}>
-                    Forgot Password?
-                  </Text>
-                </View>
-              </Container>
+      <KeyboardAvoidingView
+        KeyboardAvoidingView
+        behavior={Platform.OS == 'ios' ? 'padding' : 'height'}
+        style={styles.container}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.innerContainer}>
+            {showImage ? (
+              <Text style={styles.logo}>
+                <Image
+                  source={logo}
+                  style={{ transform: [{ scale: 0.5 }] }}
+                  resizeMode="contain"
+                />
+              </Text>
+            ) : null}
+
+            <View style={styles.inputView}>
+              <TextInput
+                style={styles.inputText}
+                placeholderTextColor="#003f5c"
+                placeholder="Email"
+                keyboardType={'email-address'}
+                returnKeyType="next"
+                autoCapitalize="none"
+                autoCorrect={false}
+                onSubmitEditing={event => {
+                  this.refs.SecondInput._root.focus();
+                }}
+                onChangeText={value => this.onChangeText('username', value)}
+                onFocus={() => this.fadeOut()}
+                onEndEditing={() => this.fadeIn()}
+              />
             </View>
-          </TouchableWithoutFeedback>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+            <View style={styles.inputView}>
+              <TextInput
+                secureTextEntry
+                style={styles.inputText}
+                placeholder="Password"
+                placeholderTextColor="#003f5c"
+                returnKeyType="go"
+                autoCapitalize="none"
+                autoCorrect={false}
+                secureTextEntry={true}
+                ref="SecondInput"
+                onChangeText={value =>
+                  this.onChangeText('password', value)
+                }
+                onFocus={() => this.fadeOut()}
+                onEndEditing={() => this.fadeIn()}
+              />
+            </View>
+            <TouchableOpacity>
+              <Text style={styles.forgot}>Forgot Password?</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => this.signIn()}
+              style={[
+                styles.loginBtn,
+                {
+                  backgroundColor: this.state.isSignInDisabled
+                    ? '#ccc'
+                    : '#009688',
+                },
+              ]}
+            activeOpacity={0.5}
+            disabled={this.state.isSignInDisabled}>
+              <Text style={styles.loginText}>LOGIN</Text>
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Text style={styles.loginText}>Signup</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     );
   }
 }
+
 const styles = StyleSheet.create({
   container: {
+    flex: 1
+  },
+  innerContainer: {
     flex: 1,
     backgroundColor: '#0B7EA0',
-    justifyContent: 'center',
-    flexDirection: 'column',
-  },
-  input: {
-    flex: 1,
-    fontSize: 17,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  infoContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    height: 300,
-    bottom: 25,
-    flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 30,
-    backgroundColor: '#0B7EA0',
+    justifyContent: 'center'
   },
-  itemStyle: {
-    marginBottom: 20,
+  logo: {
+    paddingBottom: 0,
+    color: '#fb5b5a',
+    marginBottom: 40,
+    marginTop: 10,
+
+    height: 120
   },
-  iconStyle: {
-    color: '#fff',
-    fontSize: 30,
-    marginRight: 15,
-  },
-  buttonStyle: {
-    alignItems: 'center',
+  inputView: {
+    width: '80%',
     backgroundColor: '#00BCB4',
-    padding: 14,
-    marginBottom: 20,
     borderRadius: 4,
-   
+    height: 50,
+    marginBottom: 20,
+    justifyContent: 'center',
+    padding: 20
   },
-  buttonText: {
-    fontWeight: 'bold',
-    fontSize: 24,
-    padding: 2,
-    color: '#fff',
+  inputText: {
+    height: 50,
+    color: 'white'
   },
-  forgotPasswordText: {
-    fontSize: 12,
-    fontWeight: 'normal',
-    color: '#fff',
+  forgot: {
+    color: 'white',
+    fontSize: 11
   },
-  logoContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    height: 400,
-    bottom: 180,
-    
+  loginBtn: {
+    width: '80%',
+    backgroundColor: '#00BCB4',
+    borderRadius: 4,
+    height: 50,
     alignItems: 'center',
-   // justifyContent: 'center',
-    flex: 1,
+    justifyContent: 'center',
+    marginTop: 40,
+    marginBottom: 10
   },
+  loginText: {
+    color: 'white'
+  }
 });

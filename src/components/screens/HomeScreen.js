@@ -4,15 +4,12 @@ import {
   View,
   Text,
   TouchableOpacity,
-  TextInput,
   KeyboardAvoidingView,
-  Keyboard,
-  TouchableWithoutFeedback,
   ScrollView,
   Platform
 } from 'react-native';
-import { SafeAreaView, NavigationActions } from 'react-navigation';
-import { Container, Item, Input } from 'native-base';
+import { SafeAreaView } from 'react-navigation';
+import { Item, Input, Toast } from 'native-base';
 import { connect } from 'react-redux';
 import NetInfo from '@react-native-community/netinfo';
 import RNPickerSelect from 'react-native-picker-select';
@@ -21,11 +18,8 @@ import Constants from 'expo-constants';
 import * as Location from 'expo-location';
 import * as Permissions from 'expo-permissions';
 import moment from 'moment';
-import RadioForm, {
-  RadioButton,
-  RadioButtonInput,
-  RadioButtonLabel
-} from 'react-native-simple-radio-button';
+import * as Font from 'expo-font';
+import RadioForm from 'react-native-simple-radio-button';
 import { connectionState } from '../app/actions';
 import { IsConnected } from '../../components/network/IsConnected';
 
@@ -53,9 +47,9 @@ class HomeScreen extends React.Component {
     guideName: '',
     fishLength: '',
     tagLocationCode: '',
-    email: 'kb@aol.com',
-    phone: '9492443191',
-    isDisabled: false
+    email: '',
+    phone: '',
+    isDisabled: true
   };
 
   species = [
@@ -70,7 +64,7 @@ class HomeScreen extends React.Component {
     { label: 'Bahamas', value: 'BA' }
   ];
 
-  static navigationOptions = ({ navigation }) => ({
+  static navigationOptions = () => ({
     animationEnabled: true
   });
 
@@ -82,6 +76,11 @@ class HomeScreen extends React.Component {
   }
 
   async componentDidMount() {
+    await Font.loadAsync({
+      Roboto: require('native-base/Fonts/Roboto.ttf'),
+      Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf')
+    });
+
     Auth.currentAuthenticatedUser()
       .then(user => this.setState({ user: user.attributes }))
       .catch(err => console.log(err));
@@ -110,7 +109,6 @@ class HomeScreen extends React.Component {
 
   getLocation = async () => {
     let { status } = await Permissions.askAsync(Permissions.LOCATION);
-    let locatedArea = null;
 
     if (status !== 'granted') {
       this.setState({
@@ -158,7 +156,72 @@ class HomeScreen extends React.Component {
 
     const { phone_number, email } = user;
 
-    const tagReport = {
+    Toast.show({
+      text: 'Tag successfully submitted!',
+      buttonText: 'Okay',
+      duration: 5000,
+      position: 'bottom'
+    });
+
+    const tagReport = await this.formatTagReport(
+      tagArea,
+      email,
+      fishType,
+      comment,
+      tagLocationCode,
+      tagNumber,
+      location,
+      fishLength,
+      user,
+      phone_number
+    );
+
+    //console.log(tagReport);
+    //this.refs.radioForm.updateIsActiveIndex(-1);
+
+    try {
+      const result = await API.graphql(
+        graphqlOperation(mutations.createTagReports, {
+          input: tagReport
+        })
+      );
+      console.log('DB active - item created!', result);
+      this.props.updateConnectionState(true);
+
+      this.clearTagReportState();
+    } catch (err) {
+      //console.log('error creating tarReport...', err);
+      this.setState({
+        errorMessage: 'Unable to submit tag report'
+      });
+      Toast.hide();
+      Toast.show({
+        text: 'Unable to submit tag report',
+        buttonText: 'Okay',
+        duration: 5000,
+        position: 'bottom'
+      });
+    }
+  };
+
+  onChange = (key, value) => {
+    this.setState({ [key]: value });
+    this.enableSubmission(value);
+  };
+
+  formatTagReport = async (
+    tagArea,
+    email,
+    fishType,
+    comment,
+    tagLocationCode,
+    tagNumber,
+    location,
+    fishLength,
+    user,
+    phone_number
+  ) => {
+    return {
       tagArea,
       email,
       fishType,
@@ -170,49 +233,35 @@ class HomeScreen extends React.Component {
       guideName: user['custom:firstName'] + ' ' + user['custom:lastName'],
       phone: phone_number
     };
+  };
 
-    console.log(tagReport);
+  enableSubmission = (value) => {
+    const { tagNumber, fishType, fishLength, location, user } = this.state;
 
-    // TODO  - perform an optimistic response to update the UI immediately
-    // const restaurants = [...this.state.restaurants, restaurant];
+    const isButtonDisabled = tagNumber && fishType && fishLength && location && user ? false : true;
 
-    this.refs.radioForm.updateIsActiveIndex(-1);
+    this.setState({ isDisabled: isButtonDisabled });
 
-    try {
-      await API.graphql(
-        graphqlOperation(mutations.createTagReports, {
-          input: tagReport
-        })
-      );
-      console.log('DB not active - item created!');
-      this.props.updateConnectionState(true);
-      this.clearTagReportState();
-    } catch (err) {
-      console.log('error creating tarReport...', err);
-      this.setState({
-        errorMessage: 'Unable to submit tag report'
-      });
+    if (value.length === 0 && !isButtonDisabled) {
+      this.setState({ isDisabled: true });
     }
-  };
-
-  onChange = (key, value) => {
-    this.setState({ [key]: value });
-  };
+  }
 
   clearTagReportState() {
     this.setState({
-      message: 'Tag successfully submitted!',
+    
       fishLength: null,
       tagNumber: null,
       tagArea: null,
-      fishType: 0,
+      fishType: null,
       comment: null,
       tagDate: null,
       tagLocation: null,
       tagLocationCode: null
     });
-  }
 
+    this.getLocation();
+  }
   renderLocationTag = () => {
     const locationSelectPlaceHolder = {
       label: 'Select tag region...',
@@ -230,15 +279,11 @@ class HomeScreen extends React.Component {
       />
     );
   };
-
   render() {
-    let text,
-      message = 'Locating.....';
+    let message = 'Locating.....';
 
     if (this.state.errorMessage) {
-      text = this.state.errorMessage;
     } else if (this.state.location) {
-      text = this.state.location;
       message = this.state.message;
     }
 
@@ -284,6 +329,7 @@ class HomeScreen extends React.Component {
                   onChangeText={v => this.onChange('fishLength', v)}
                   value={this.state.fishLength}
                   placeholder="Fish Length"
+                  keyboardType={'phone-pad'}
                 />
               </Item>
               <Item style={styles.itemStyle}>
@@ -298,10 +344,26 @@ class HomeScreen extends React.Component {
               <View style={styles.loginButtonSection}>
                 <TouchableOpacity
                   onPress={() => this.createTagReport()}
-                  style={styles.buttonStyle}
+                  style={[
+                    styles.buttonStyle,
+                    {
+                      backgroundColor: this.state.isDisabled
+                        ? '#efefef'
+                        : '#00BCB4'
+                    }
+                  ]}
                   disabled={this.state.isDisabled}
                 >
-                  <Text style={styles.buttonText}>Submit Tag Report</Text>
+                  <Text
+                    style={[
+                      styles.buttonText,
+                      {
+                        color: this.state.isDisabled ? '#ccc' : '#fff'
+                      }
+                    ]}
+                  >
+                    Submit Tag Report
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -373,8 +435,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff'
+    fontWeight: 'bold'
   },
   textInput: {
     flex: 1,
@@ -396,7 +457,7 @@ const styles = StyleSheet.create({
     margin: 5,
     width: 380,
     borderColor: '#efefef',
-    borderWidth: .5,
+    borderWidth: 0.5,
     fontSize: 17,
     fontWeight: 'bold',
     color: '#fff'

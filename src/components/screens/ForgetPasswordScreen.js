@@ -10,18 +10,16 @@ import {
   Keyboard,
   View,
   Alert,
-  Animated
+  Animated,
+  ScrollView
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 
-import { Container, Item, Input } from 'native-base';
+import { Item, Input } from 'native-base';
 
 // AWS Amplify modular import
 import Auth from '@aws-amplify/auth';
-
-// Load the app logo
-const logo = require('../images/site-logo.png');
 
 export default class ForgetPasswordScreen extends React.Component {
   state = {
@@ -95,22 +93,16 @@ export default class ForgetPasswordScreen extends React.Component {
       <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView
           style={styles.container}
-          behavior="padding"
-          enabled
-          keyboardVerticalOffset={23}
+          behavior={Platform.OS === 'ios' ? 'padding' : null}
+          style={{ flex: 1 }}
         >
-          <TouchableWithoutFeedback
-            style={styles.container}
-            onPress={Keyboard.dismiss}
-          >
+          <ScrollView >
             <View style={styles.container}>
-              {/* App Logo */}
-              <View style={styles.logoContainer}>
-                <Animated.Image source={logo} />
-              </View>
-              {/* Infos */}
-              <Container style={styles.infoContainer}>
-                <View style={styles.container}>
+              <TouchableWithoutFeedback
+                style={styles.container}
+                onPress={Keyboard.dismiss}
+              >
+                <View style={styles.infoContainer}>
                   {/* Username */}
                   <Item style={styles.itemStyle}>
                     <Ionicons name="ios-person" style={styles.iconStyle} />
@@ -185,20 +177,60 @@ export default class ForgetPasswordScreen extends React.Component {
                     </Text>
                   </TouchableOpacity>
                 </View>
-              </Container>
+              </TouchableWithoutFeedback>
             </View>
-          </TouchableWithoutFeedback>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     );
   }
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B7EA0',
+    alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    backgroundColor: '#0B7EA0'
+  },
+  infoContainer: {
+   
+
+    marginTop: 50,
+  
+  },
+  paragraph: {
+    margin: 15,
+    fontSize: 18,
+    textAlign: 'center',
+    color: '#efefef'
+  },
+
+  loginButtonSection: {
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  buttonStyle: {
+    alignItems: 'center',
+    backgroundColor: '#00BCB4',
+    padding: 14,
+    marginTop: 20,
+    borderRadius: 4,
+    width: 350
+    //  left: Platform.OS == "ios" ? 15: 6,
+  },
+  buttonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff'
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: '#fff'
   },
   input: {
     flex: 1,
@@ -206,47 +238,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff'
   },
-  infoContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    height: 200,
-    bottom: 25,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 30,
-    backgroundColor: '#0B7EA0'
-  },
   itemStyle: {
-    marginBottom: 20
+    marginBottom: 10
   },
   iconStyle: {
     color: '#fff',
-    fontSize: 18,
-    marginRight: 15
+    fontSize: 30,
+    marginRight: 15,
   },
-  buttonStyle: {
-    alignItems: 'center',
-    backgroundColor: '#00BCB4',
-    padding: 14,
-    marginBottom: 20,
-    borderRadius: 4,
-    width: 300
-  },
-  buttonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff'
-  },
-  logoContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    height: 600,
-    bottom: 180,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1
-  }
 });

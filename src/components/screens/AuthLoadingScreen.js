@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import Auth from '@aws-amplify/auth';
+import { Updates } from 'expo';
 
 export default class AuthLoadingScreen extends React.Component {
   state = {
@@ -8,6 +9,19 @@ export default class AuthLoadingScreen extends React.Component {
   };
 
   async componentDidMount() {
+
+
+    try {
+      const update = await Updates.checkForUpdateAsync()
+      if (update.isAvailable) {
+        await Updates.fetchUpdateAsync()
+        // NOTIFY USER HERE
+        Updates.reloadAsync()
+      }
+    } catch (e) {
+        // HANDLE ERROR HERE
+    }
+
     await this.loadApp();
   }
 

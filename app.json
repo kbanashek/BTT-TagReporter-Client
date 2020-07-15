@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "BTT-TagReporter",
-    "slug": "btt-tagreporter-alpha-0-0-4",
+    "slug": "btt-tagreporter-alpha-0-1-0",
     "privacy": "public",
     "sdkVersion": "36.0.0",
     "platforms": [
@@ -9,10 +9,12 @@
       "android",
       "web"
     ],
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "android": {
+      "package": "com.btt.tagreporter.client",
+      "versionCode": 2,
       "splash": {
         "mdpi": "./assets/splash-mdpi.png",
         "hdpi": "./assets/splash-hdpi.png",
@@ -21,7 +23,19 @@
         "xxxhdpi": "./assets/splash-xxxhdpi.png",
         "resizeMode": "contain",
         "backgroundColor": "#0B7EA0"
-      }
+      },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "MANAGE_DOCUMENTS",
+        "READ_PHONE_STATE",
+        "com.anddoes.launcher.permission.UPDATE_COUNT",
+        "com.android.launcher.permission.INSTALL_SHORTCUT",
+        "com.google.android.c2dm.permission.RECEIVE",
+        "com.google.android.gms.permission.ACTIVITY_RECOGNITION",
+        "com.google.android.providers.gsf.permission.READ_GSERVICES"
+      ]
     },
     "ios": {
       "splash": {
@@ -29,10 +43,10 @@
         "resizeMode": "contain",
         "backgroundColor": "#0B7EA0"
       },
-      "supportsTablet": true
+      "supportsTablet": false
     },
     "updates": {
-      "fallbackToCacheTimeout": 0
+      "fallbackToCacheTimeout": 300000
     },
     "assetBundlePatterns": [
       "**/*"

@@ -11,12 +11,8 @@ import {
   View,
   Alert,
 } from 'react-native';
-
 import { Container, Item, Input } from 'native-base';
-
 import { Ionicons } from '@expo/vector-icons';
-
-// AWS Amplify modular import
 import Auth from '@aws-amplify/auth';
 
 export default class SettingsScreen extends React.Component {
@@ -78,9 +74,9 @@ export default class SettingsScreen extends React.Component {
     return (
       <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView
-          style={styles.container}
-          behavior="padding"
-          enabled
+             style={styles.container}
+             behavior={Platform.OS === "ios" ? "padding" : null}
+             style={{ flex: 1 }}
         >
           <TouchableWithoutFeedback
             style={styles.container}
@@ -90,14 +86,7 @@ export default class SettingsScreen extends React.Component {
               {/*Infos*/}
               <Container style={styles.infoContainer}>
                 <View style={styles.container}>
-                  <View
-                    style={[
-                      styles.buttonStyle,
-                      { borderRadius: 4, marginBottom: 20 },
-                    ]}
-                  >
-                    <Text style={styles.buttonText}>Change password</Text>
-                  </View>
+                  
                   {/* Old password */}
                   <Item style={styles.itemStyle}>
                     <Ionicons style={styles.iconStyle} name="ios-lock" />
@@ -144,7 +133,7 @@ export default class SettingsScreen extends React.Component {
                     style={{
                       justifyContent: 'center',
                       alignItems: 'center',
-                      marginBottom: 100,
+                      marginBottom: 20,
                     }}
                   />
                   <TouchableOpacity
@@ -158,7 +147,7 @@ export default class SettingsScreen extends React.Component {
                       name="md-power"
                       style={{ color: '#fff', marginRight: 10, fontSize: 24 }}
                     />
-                    <Text style={styles.buttonText}>Sign out</Text>
+                    <Text style={styles.buttonText}>Sign Out</Text>
                   </TouchableOpacity>
                 </View>
               </Container>
@@ -191,7 +180,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 30,
+    paddingHorizontal: 20,
     backgroundColor: '#0B7EA0',
   },
   itemStyle: {
@@ -208,7 +197,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginTop: 20,
     borderRadius: 4,
-    width: 300
+    width: 370
   },
   buttonText: {
     fontSize: 18,

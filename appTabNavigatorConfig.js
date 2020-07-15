@@ -38,6 +38,18 @@ const appTabNavigatorConfig = {
         />
       )
     }
+  },
+  ['Sign Out']: {
+    screen: SettingsScreen,
+    navigationOptions: {
+      tabBarLabel: 'Settings',
+      tabBarIcon: ({ tintColor }) => (
+        <Ionicons
+          style={{ fontSize: 26, color: tintColor }}
+          name="ios-settings"
+        />
+      )
+    }
   }
 };
 

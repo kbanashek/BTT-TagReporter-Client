@@ -38,5 +38,11 @@
 				}
 			}
 		}
-	}
+	},
+	"monitoring":{
+		"Topics":{
+		  "service":"SNS",
+		  "providerPlugin":"awscloudformation"
+		}
+	  },
 }
