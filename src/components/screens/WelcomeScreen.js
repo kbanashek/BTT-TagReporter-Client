@@ -1,45 +1,89 @@
 import React from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Image } from 'react-native';
+
+import * as Font from 'expo-font';
+import { AppLoading } from 'expo';
+
 const logo = require('../images/site-logo.png');
 
 export default class WelcomeScreen extends React.Component {
   handleRoute = async destination => {
-    await this.props.navigation.navigate(destination);
+     this.props.navigation.navigate(destination);
   };
-  render() {
-    return (
-      <View style={styles.container}>
-        <View
-          style={{
-            marginTop: 80,
-            width: 292,
-            marginBottom: 100,
-            alignItems: 'center',
-          }}
-        >
-          <Image source={logo} style={{ width: 252, height: 101,  marginTop: 60, }} />
-        </View>
-        <TouchableOpacity
-          onPress={() => this.handleRoute('SignUp')}
-          style={styles.buttonStyle}
-        >
-          <Text style={styles.textStyle}>Register</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => this.handleRoute('SignIn')}
-          style={styles.buttonStyle}
-        >
-          <Text style={styles.textStyle}>Sign In</Text>
-        </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => this.handleRoute('ForgetPassword')}
-          style={styles.buttonStyle}
-        >
-          <Text style={styles.textStyle}>Forget password ?</Text>
-        </TouchableOpacity>
-      </View>
-    );
+  state = {
+    fontsLoaded: false
+  };
+
+  async loadFontsAsync() {
+    await Font.loadAsync({
+      'PermanentMarker-Regular': require('../../../assets/fonts/Permanent_Marker/PermanentMarker-Regular.ttf')
+    });
+    this.setState({ fontsLoaded: true });
+  }
+
+  async componentDidMount() {
+    this.loadFontsAsync();
+  }
+
+  render() {
+    if (this.state.fontsLoaded) {
+      return (
+        <View style={styles.container}>
+          <View
+            style={{
+              marginTop: 70,
+              width: 292,
+              marginBottom: 100,
+              alignItems: 'center'
+            }}
+          >
+            <Image
+              source={logo}
+              style={{
+                transform: [{ scale: 1.5 }],
+                marginTop: 60,
+                width: 220,
+                height: 140
+              }}
+              resizeMode="contain"
+            />
+            <Text
+              style={{
+                fontWeight: 'normal',
+                fontSize: 28,
+                padding: 2,
+                color: '#efefef',
+                fontFamily: 'PermanentMarker-Regular'
+              }}
+            >
+              Tag Reporter
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => this.handleRoute('SignUp')}
+            style={styles.buttonStyle}
+          >
+            <Text style={styles.textStyle}>Register</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => this.handleRoute('SignIn')}
+            style={styles.buttonStyle}
+          >
+            <Text style={styles.textStyle}>Sign In</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => this.handleRoute('ForgetPassword')}
+            style={styles.buttonStyle}
+          >
+            <Text style={styles.textStyle}>Forgot password ?</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    } else {
+      return (<AppLoading />);
+    }
   }
 }
 
@@ -47,7 +91,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0B7EA0',
-    alignItems: 'center',
+    alignItems: 'center'
   },
   buttonStyle: {
     alignItems: 'center',
@@ -58,9 +102,9 @@ const styles = StyleSheet.create({
     width: 300
   },
   textStyle: {
-    fontWeight: 'bold',
     fontSize: 24,
     padding: 2,
-    color: '#fff',
-  },
+    color: '#efefef',
+    fontFamily: 'PermanentMarker-Regular'
+  }
 });

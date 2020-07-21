@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginTop: 20,
     borderRadius: 4,
-    width: 350
+    width: Platform.OS == "ios" ? 320: 350,
     //  left: Platform.OS == "ios" ? 15: 6,
   },
   buttonText: {
@@ -236,10 +236,12 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 17,
     fontWeight: 'bold',
-    color: '#fff'
+    color: '#fff',
+    
   },
   itemStyle: {
-    marginBottom: 10
+    marginBottom: 10,
+    padding: 10
   },
   iconStyle: {
     color: '#fff',

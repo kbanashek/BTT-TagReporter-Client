@@ -41,10 +41,11 @@ export class DrawerComponent extends React.Component {
     styles = StyleSheet.create({
       container: {
         paddingTop: 40,
-        flex: 1
+        flex: 1,
+        backgroundColor: '#efefef'
       },
       navItemStyle: {
-        padding: 10,
+        padding: 12,
         
       },
       navItemText:{

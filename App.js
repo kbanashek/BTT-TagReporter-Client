@@ -1,11 +1,6 @@
 import React from 'react';
-import {
-  TouchableOpacity,
-  View,
-  Platform} from 'react-native';
-import {
-  createSwitchNavigator,
-  createAppContainer} from 'react-navigation';
+import { TouchableOpacity, View, Platform } from 'react-native';
+import { createSwitchNavigator, createAppContainer } from 'react-navigation';
 
 import { createDrawerNavigator } from 'react-navigation-drawer';
 import { createStackNavigator } from 'react-navigation-stack';
@@ -14,7 +9,7 @@ import { Provider } from 'react-redux';
 import { createStore, applyMiddleware } from 'redux';
 import reducer from './src/components/app/reducer';
 import thunk from 'redux-thunk';
-
+import * as Font from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
 
 import AuthLoadingScreen from './src/components/screens/AuthLoadingScreen';
@@ -25,7 +20,7 @@ import ForgetPasswordScreen from './src/components/screens/ForgetPasswordScreen'
 import HomeScreen from './src/components/screens/HomeScreen';
 import SettingsScreen from './src/components/screens/SettingsScreen';
 import TagLogScreen from './src/components/screens/TagLogScreen';
-
+import { useFonts } from 'expo-font';
 import Amplify from '@aws-amplify/core';
 import awsmobile from './aws-exports';
 import { AppTabNavigator } from './appTabNavigatorConfig';

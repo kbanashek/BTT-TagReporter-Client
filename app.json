@@ -14,7 +14,7 @@
     "icon": "./assets/icon.png",
     "android": {
       "package": "com.btt.tagreporter.client",
-      "versionCode": 2,
+      "versionCode": 3,
       "splash": {
         "mdpi": "./assets/splash-mdpi.png",
         "hdpi": "./assets/splash-hdpi.png",

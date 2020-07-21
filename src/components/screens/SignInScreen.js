@@ -115,19 +115,19 @@ export default class App extends React.Component {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.innerContainer}>
             {showImage ? (
-              <Text style={styles.logo}>
+             
                 <Image
                   source={logo}
-                  style={{ transform: [{ scale: 0.5 }] }}
+                  style={{ transform: [{ scale: 1.5 }],width: 200, height: 120, paddingBottom:100,marginBottom: 40, }}
                   resizeMode="contain"
                 />
-              </Text>
+            
             ) : null}
 
             <View style={styles.inputView}>
               <TextInput
                 style={styles.inputText}
-                placeholderTextColor="#003f5c"
+                placeholderTextColor="#efefef"
                 placeholder="Email"
                 keyboardType={'email-address'}
                 returnKeyType="next"
@@ -146,7 +146,7 @@ export default class App extends React.Component {
                 secureTextEntry
                 style={styles.inputText}
                 placeholder="Password"
-                placeholderTextColor="#003f5c"
+                placeholderTextColor="#efefef"
                 returnKeyType="go"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -159,7 +159,7 @@ export default class App extends React.Component {
                 onEndEditing={() => this.fadeIn()}
               />
             </View>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={()=> this.props.navigation.navigate('ForgetPassword')}>
               <Text style={styles.forgot}>Forgot Password?</Text>
             </TouchableOpacity>
             <TouchableOpacity 
@@ -176,7 +176,7 @@ export default class App extends React.Component {
             disabled={this.state.isSignInDisabled}>
               <Text style={styles.loginText}>LOGIN</Text>
             </TouchableOpacity>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={()=> this.props.navigation.navigate('SignUp')}>
               <Text style={styles.loginText}>Signup</Text>
             </TouchableOpacity>
           </View>
@@ -201,8 +201,7 @@ const styles = StyleSheet.create({
     color: '#fb5b5a',
     marginBottom: 40,
     marginTop: 10,
-
-    height: 120
+    height: 180
   },
   inputView: {
     width: '80%',
@@ -215,11 +214,12 @@ const styles = StyleSheet.create({
   },
   inputText: {
     height: 50,
-    color: 'white'
+    color: 'white',
+    fontSize: 20
   },
   forgot: {
     color: 'white',
-    fontSize: 11
+    fontSize: 14
   },
   loginBtn: {
     width: '80%',
@@ -232,6 +232,9 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   loginText: {
-    color: 'white'
+    fontWeight: 'bold',
+    fontSize: 21,
+    padding: 2,
+    color: '#fff'
   }
 });

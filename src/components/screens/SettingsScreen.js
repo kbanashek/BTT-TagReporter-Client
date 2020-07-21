@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginTop: 20,
     borderRadius: 4,
-    width: 370
+    width: '96%',
   },
   buttonText: {
     fontSize: 18,

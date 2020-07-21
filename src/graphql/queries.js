@@ -24,10 +24,10 @@ export const getTagReports = /* GraphQL */ `
 export const listTagReportss = /* GraphQL */ `
   query ListTagReportss(
     $filter: ModelTagReportsFilterInput
-    $limit: Int
+   
     $nextToken: String
   ) {
-    listTagReportss(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    listTagReportss(filter: $filter, limit: 100, nextToken: $nextToken) {
       items {
         id
         tagNumber

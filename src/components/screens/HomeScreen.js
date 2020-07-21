@@ -22,8 +22,9 @@ import * as Font from 'expo-font';
 import RadioForm from 'react-native-simple-radio-button';
 import { connectionState } from '../app/actions';
 import { IsConnected } from '../../components/network/IsConnected';
-
 import * as mutations from '../../graphql/mutations';
+import species from '../data/species';
+import locations from '../data/locations';
 
 class HomeScreen extends React.Component {
   constructor(props) {
@@ -52,53 +53,20 @@ class HomeScreen extends React.Component {
     isDisabled: true
   };
 
-  species = [
-    { label: 'Bonefish    ', value: 'bonefish' },
-    { label: 'Permit      ', value: 'permit' }
-  ];
-
-  locations = [
-    { label: 'US', value: 'BTT' },
-    { label: 'Belize', value: 'BZ' },
-    { label: 'Mexico', value: 'MX' },
-    { label: 'Bahamas', value: 'BA' }
-  ];
-
   static navigationOptions = () => ({
     animationEnabled: true
   });
 
-  componentWillUnmount() {
-    NetInfo.isConnected.removeEventListener(
-      'connectionChange',
-      this.handleConnectionChange
-    );
-  }
-
   async componentDidMount() {
     await Font.loadAsync({
       Roboto: require('native-base/Fonts/Roboto.ttf'),
-      Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf')
+      Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf'),
+      'PermanentMarker-Regular': require('../../../assets/fonts/Permanent_Marker/PermanentMarker-Regular.ttf')
     });
 
-    Auth.currentAuthenticatedUser()
-      .then(user => this.setState({ user: user.attributes }))
-      .catch(err => console.log(err));
+    await this.getCurrentUser();
 
-    if (Platform.OS === 'android' && !Constants.isDevice) {
-      this.setState({
-        errorMessage:
-          'Oops, this will not work on Sketch in an Android emulator. Try it on your device!'
-      });
-      this.setState({ tagArea: 'Key Largo, FL' });
-    } else {
-      await this.getLocation();
-    }
-
-    NetInfo.isConnected.addEventListener(
-      'connectionChange',
-      this.handleConnectionChange
-    );
+    await this.getCurrentLocation();
   }
 
   handleConnectionChange = isConnected => {
@@ -160,7 +128,8 @@ class HomeScreen extends React.Component {
       text: 'Tag successfully submitted!',
       buttonText: 'Okay',
       duration: 5000,
-      position: 'bottom'
+      position: 'bottom',
+      type: 'success'
     });
 
     const tagReport = await this.formatTagReport(
@@ -176,24 +145,21 @@ class HomeScreen extends React.Component {
       phone_number
     );
 
-    //console.log(tagReport);
-    //this.refs.radioForm.updateIsActiveIndex(-1);
-
     try {
       const result = await API.graphql(
         graphqlOperation(mutations.createTagReports, {
           input: tagReport
         })
       );
-      console.log('DB active - item created!', result);
-      this.props.updateConnectionState(true);
 
       this.clearTagReportState();
+      this.getLocation();
     } catch (err) {
-      //console.log('error creating tarReport...', err);
+      console.log('Warning!!! - error creating tarReport...', err);
       this.setState({
         errorMessage: 'Unable to submit tag report'
       });
+      alert(err.message);
       Toast.hide();
       Toast.show({
         text: 'Unable to submit tag report',
@@ -227,7 +193,7 @@ class HomeScreen extends React.Component {
       fishType,
       comment,
       tagNumber: tagLocationCode + '-' + tagNumber,
-      tagDate: moment().format('dddd, MMMM Do YYYY, h:mm:ss a'),
+      tagDate: moment().format(),
       tagLocation: location,
       fishLength: fishLength + ' ' + user['custom:preferredMeasure'],
       guideName: user['custom:firstName'] + ' ' + user['custom:lastName'],
@@ -235,32 +201,53 @@ class HomeScreen extends React.Component {
     };
   };
 
-  enableSubmission = (value) => {
+  isEmpty = str => {
+    return !str || 0 === str.length;
+  };
+
+  enableSubmission = value => {
     const { tagNumber, fishType, fishLength, location, user } = this.state;
 
-    const isButtonDisabled = tagNumber && fishType && fishLength && location && user ? false : true;
+    const isButtonDisabled =
+      this.isEmpty(tagNumber) ||
+      this.isEmpty(fishType) ||
+      this.isEmpty(fishLength) ||
+      this.isEmpty(location) ||
+      this.isEmpty(user);
 
     this.setState({ isDisabled: isButtonDisabled });
 
     if (value.length === 0 && !isButtonDisabled) {
       this.setState({ isDisabled: true });
     }
-  }
+  };
+
+  getCurrentUser = async () => {
+    Auth.currentAuthenticatedUser()
+      .then(user => this.setState({ user: user.attributes }))
+      .catch(err => console.log(err));
+  };
+
+  getCurrentLocation = async () => {
+    if (Platform.OS === 'android' && !Constants.isDevice) {
+      this.setState({
+        errorMessage:
+          'Oops, this will not work on Sketch in an Android emulator. Try it on your device!'
+      });
+      this.setState({ tagArea: 'Key Largo, FL' });
+    } else {
+      await this.getLocation();
+    }
+  };
 
   clearTagReportState() {
     this.setState({
-    
-      fishLength: null,
-      tagNumber: null,
+      fishLength: '',
+      tagNumber: '',
       tagArea: null,
-      fishType: null,
-      comment: null,
-      tagDate: null,
-      tagLocation: null,
-      tagLocationCode: null
+      comment: '',
+      tagDate: null
     });
-
-    this.getLocation();
   }
   renderLocationTag = () => {
     const locationSelectPlaceHolder = {
@@ -274,11 +261,12 @@ class HomeScreen extends React.Component {
       <RNPickerSelect
         placeholder={locationSelectPlaceHolder}
         onValueChange={value => this.setState({ tagLocationCode: value })}
-        items={this.locations}
-        style={styles.input}
+        items={locations}
+        style={pickerStyles}
       />
     );
   };
+
   render() {
     let message = 'Locating.....';
 
@@ -291,21 +279,33 @@ class HomeScreen extends React.Component {
       <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView>
           <ScrollView>
-            <View style={styles.container}>
+            <View
+              style={[
+                styles.container,
+                {
+                  margin: 20
+                }
+              ]}
+            >
               {this.getConnectionInfo()}
               {this.renderLocation()}
               <Text style={styles.paragraph}>{message}</Text>
               <RadioForm
                 ref="radioForm"
-                radio_props={this.species}
+                radio_props={species}
                 initial={this.state.fishType}
                 formHorizontal={true}
                 labelHorizontal={true}
                 buttonColor={'#2196f3'}
                 animation={true}
-                buttonSize={20}
-                buttonOuterSize={30}
-                labelStyle={{ fontSize: 15, color: 'white' }}
+                buttonSize={50}
+                buttonOuterSize={55}
+                labelStyle={{
+                  fontSize: 17,
+                  color: 'white',
+                  padding: 10,
+                  paddingBottom: 30
+                }}
                 onPress={value => {
                   this.setState({ fishType: value });
                 }}
@@ -375,7 +375,7 @@ class HomeScreen extends React.Component {
 
   renderLocation = () => {
     return this.state.tagArea ? (
-      <Text style={styles.location}>{this.state.tagArea}</Text>
+      <Text style={styles.locationText}>{this.state.tagArea}</Text>
     ) : null;
   };
 
@@ -385,10 +385,6 @@ class HomeScreen extends React.Component {
     ) : null;
   };
 }
-
-// const mapDispatchToProps = () => {
-//     connectionState;
-// };
 
 function mapDispatchToProps(dispatch) {
   return {
@@ -407,13 +403,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#0B7EA0'
   },
   paragraph: {
-    margin: 15,
-    fontSize: 18,
+    margin: 10,
+    fontSize: 17,
     textAlign: 'center',
-    color: '#efefef'
+    color: '#efefef',
+    marginBottom: 30
+  },
+  locationText: {
+   // fontFamily: 'PermanentMarker-Regular',
+    margin: 10,
+    fontSize: 22,
+    textAlign: 'center',
+    color: '#efefef',
+    marginBottom: 30
   },
   location: {
-    margin: 15,
+    margin: 5,
     fontSize: 24,
     textAlign: 'center',
     color: '#efefef',
@@ -430,12 +435,13 @@ const styles = StyleSheet.create({
     padding: 14,
     marginTop: 20,
     borderRadius: 4,
-    width: 350
-    //  left: Platform.OS == "ios" ? 15: 6,
+
+    width: Platform.OS === 'ios' ? 330 : 350
   },
   buttonText: {
-    fontSize: 18,
-    fontWeight: 'bold'
+    fontSize: 24,
+    fontWeight: 'bold',
+    //fontFamily: 'PermanentMarker-Regular'
   },
   textInput: {
     flex: 1,
@@ -449,17 +455,39 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff'
   },
+
   itemStyle: {
     marginBottom: 10
   },
   dropDownInput: {
     height: 55,
     margin: 5,
-    width: 380,
+    width: Platform.OS === 'ios' ? 340 : 370,
     borderColor: '#efefef',
     borderWidth: 0.5,
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#fff'
+  }
+});
+
+const pickerStyles = StyleSheet.create({
+  inputIOS: {
+    color: 'white',
+    borderRadius: 5,
+    fontSize: 17,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    fontWeight: 'normal'
+  },
+  placeholder: {
+    color: 'white',
+    paddingTop: 20
+  },
+  inputAndroid: {
+    color: 'white',
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    fontWeight: 'bold'
   }
 });

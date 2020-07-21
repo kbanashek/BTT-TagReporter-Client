@@ -5,28 +5,25 @@ import {
   StyleSheet,
   Text,
   SafeAreaView,
-  StatusBar,
   KeyboardAvoidingView,
   Keyboard,
   View,
   Alert,
   Modal,
   FlatList,
-  Animated
+  Animated,
+  TextInput
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Container, Item, Input } from 'native-base';
+import { Container, Item, Input, Toast, Spinner } from 'native-base';
 import Auth from '@aws-amplify/auth';
-import RadioForm, {
-  RadioButton,
-  RadioButtonInput,
-  RadioButtonLabel
-} from 'react-native-simple-radio-button';
-import data from '../countriesData';
-const logo = require('../images/site-logo.png');
+import * as Font from 'expo-font';
+import RadioForm from 'react-native-simple-radio-button';
+import countriesData from '../data/countriesData';
 
-const defaultFlag = data.filter(obj => obj.name === 'United States')[0].flag;
-const defaultCode = data.filter(obj => obj.name === 'United States')[0]
+const defaultFlag = countriesData.filter(obj => obj.name === 'United States')[0]
+  .flag;
+const defaultCode = countriesData.filter(obj => obj.name === 'United States')[0]
   .dial_code;
 
 export default class SignUpScreen extends React.Component {
@@ -45,7 +42,9 @@ export default class SignUpScreen extends React.Component {
     firstName: '',
     lastName: '',
     isSignUpDisabled: true,
-    isConfirmDisabled: true
+    isConfirmDisabled: true,
+    loading: false,
+    membershipCode: ''
   };
 
   preferredMeasureSize = [
@@ -58,57 +57,59 @@ export default class SignUpScreen extends React.Component {
       {
         [key]: value
       },
-      this.enableSignUp(),
+
       this.enableConfirmSignUp()
     );
   }
 
   enableConfirmSignUp = () => {
     const { authCode } = this.state;
-
-    const isConfirmDisabled = authCode ? true : false;
-
-    console.log('isConfirmDisabled' + isConfirmDisabled);
-
+    const isConfirmDisabled = authCode.length === 0 ? true : false;
     this.setState({
       isConfirmDisabled
     });
+  };
 
-    console.log('authCode' + authCode);
+  isEmpty = str => {
+    return !str || 0 === str.length;
   };
 
   enableSignUp = () => {
-    const { firstName, lastName, email, password, phoneNumber } = this.state;
-    const allRequiredFields =
-      firstName && lastName && email && password && phoneNumber ? true : false;
-    console.log('allRequiredFields' + allRequiredFields.toString());
+    const {
+      firstName,
+      lastName,
+      email,
+      password,
+      phoneNumber,
+      membershipCode
+    } = this.state;
 
-    this.setState({
-      isSignUpDisabled: !allRequiredFields
-    });
+    let allRequiredFields =
+      this.isEmpty(firstName) ||
+      this.isEmpty(lastName) ||
+      this.isEmpty(email) ||
+      this.isEmpty(password) ||
+      this.isEmpty(phoneNumber) || membershipCode !== 'btt#1'
+        ? true
+        : false;
+
+    // console.log('this.isEmpty(firstName)' + this.isEmpty(firstName));
+    // console.log('this.isEmpty(lastName)' + this.isEmpty(lastName));
+    // console.log('this.isEmpty(email)' + this.isEmpty(email));
+    // console.log('this.isEmpty(password)' + this.isEmpty(password));
+    // console.log('this.isEmpty(phoneNumber)' + this.isEmpty(phoneNumber));
+
+    console.log('isdisabled' + allRequiredFields);
+
+    return allRequiredFields ;
   };
 
-  componentDidMount() {
-    this.fadeIn();
-    //this.refs.radioForm.updateIsActiveIndex(1);
-  }
-
-  fadeIn() {
-    Animated.timing(this.state.fadeIn, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: true
-    }).start();
-    this.setState({ isHidden: true });
-  }
-
-  fadeOut() {
-    Animated.timing(this.state.fadeOut, {
-      toValue: 0,
-      duration: 1000,
-      useNativeDriver: true
-    }).start();
-    this.setState({ isHidden: false });
+  async componentDidMount() {
+    await Font.loadAsync({
+      Roboto: require('native-base/Fonts/Roboto.ttf'),
+      Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf'),
+      'PermanentMarker-Regular': require('../../../assets/fonts/Permanent_Marker/PermanentMarker-Regular.ttf')
+    });
   }
 
   showModal() {
@@ -123,7 +124,7 @@ export default class SignUpScreen extends React.Component {
   }
 
   async getCountry(country) {
-    const countryData = await data;
+    const countryData = await countriesData;
     try {
       const countryCode = await countryData.filter(
         obj => obj.name === country
@@ -131,7 +132,7 @@ export default class SignUpScreen extends React.Component {
       const countryFlag = await countryData.filter(
         obj => obj.name === country
       )[0].flag;
-      // Set data from user choice of country
+      // Set countriesData from user choice of country
       this.setState({ phoneNumber: countryCode, flag: countryFlag });
       await this.hideModal();
     } catch (err) {
@@ -140,18 +141,17 @@ export default class SignUpScreen extends React.Component {
   }
 
   async signUp() {
+    this.setState({ loading: true });
     const {
-      username,
       password,
       email,
-      phoneNumber,
+      phoneNumber: phone_number,
       firstName,
       lastName,
       preferredMeasure
     } = this.state;
 
-    const phone_number = phoneNumber;
-
+    console.log('****', phone_number);
     await Auth.signUp({
       username: email,
       password,
@@ -164,16 +164,33 @@ export default class SignUpScreen extends React.Component {
       }
     })
       .then(() => {
-        console.log('sign up successful!');
-        Alert.alert('Enter the confirmation code you received.');
+        this.setState({ loading: false });
+        Toast.show({
+          text: 'Enter the confirmation code you received.',
+          buttonText: 'Okay',
+          duration: 5000,
+          position: 'bottom',
+          type: 'success'
+        });
       })
       .catch(err => {
+        this.setState({ loading: false });
         if (!err.message) {
-          console.log('Error when signing up: ', err);
-          Alert.alert('Error when signing up: ', err);
+          Toast.show({
+            text: 'Unable to register user',
+            buttonText: 'Okay',
+            duration: 5000,
+            position: 'bottom',
+            type: 'danger'
+          });
         } else {
-          console.log('Error when signing up: ', err.message);
-          Alert.alert('Error when signing up: ', err.message);
+          Toast.show({
+            text: err.message,
+            buttonText: 'Okay',
+            duration: 5000,
+            position: 'bottom',
+            type: 'warning'
+          });
         }
       });
   }
@@ -218,294 +235,278 @@ export default class SignUpScreen extends React.Component {
   }
 
   render() {
-    let { fadeOut, fadeIn, isHidden, flag } = this.state;
-    const countryData = data;
+    const { flag } = this.state;
+    const enableRegistration = this.enableSignUp();
+    const countryData = countriesData;
     return (
       <SafeAreaView style={styles.container}>
-       
         <KeyboardAvoidingView
           style={styles.container}
-          behavior={Platform.OS === "ios" ? "padding" : null}
+          behavior={Platform.OS === 'ios' ? 'padding' : null}
           style={{ flex: 1 }}
-         
         >
-          <TouchableWithoutFeedback
-            style={styles.container}
-            onPress={Keyboard.dismiss}
-          >
-            <View style={styles.container}>
-              <Container style={styles.infoContainer}>
-                <View style={styles.container}>
-                  <Item style={styles.itemStyle}>
-                    <Ionicons name="ios-person" style={styles.iconStyle} />
-                    <Input
-                      style={styles.input}
-                      placeholder="First Name"
-                      placeholderTextColor="#adb4bc"
-                      returnKeyType="next"
-                      ref="SecondInput"
-                      keyboardType={'default'}
-                      autoCapitalize="words"
-                      autoCorrect={false}
-                      onChangeText={value =>
-                        this.onChangeText('firstName', value)
-                      }
-                      onSubmitEditing={event => {
-                        this.refs.SecondInput._root.focus();
-                      }}
-                      onFocus={() => this.fadeOut()}
-                      onEndEditing={() => this.fadeIn()}
-                    />
+          <Container style={styles.infoContainer}>
+            <View style={[styles.container, { top: 50 }]}>
+              <Item style={[styles.itemStyle, { top: 0 }]}>
+                <Ionicons name="ios-person" style={styles.iconStyle} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="First Name"
+                  placeholderTextColor="#adb4bc"
+                  returnKeyType="next"
+                  ref="SecondInput"
+                  keyboardType={'default'}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  autoFocus={true}
+                  onChangeText={value => this.onChangeText('firstName', value)}
+                  selectionColor="white"
+                />
 
-                    <Input
-                      style={styles.input}
-                      placeholder="Last Name"
-                      placeholderTextColor="#adb4bc"
-                      returnKeyType="next"
-                      keyboardType={'default'}
-                      autoCapitalize="words"
-                      autoCorrect={false}
-                      ref="SecondInput"
-                      onChangeText={value =>
-                        this.onChangeText('lastName', value)
-                      }
-                      onSubmitEditing={event => {
-                        this.refs.ThirdInput._root.focus();
-                      }}
-                      onFocus={() => this.fadeOut()}
-                      onEndEditing={() => this.fadeIn()}
-                    />
-                  </Item>
+                <TextInput
+                  style={[styles.input, { marginLeft: 40, backgroundColor: 'grey' }]}
+                  placeholder="Last Name"
+                  placeholderTextColor="#adb4bc"
+                  returnKeyType="next"
+                  keyboardType={'default'}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  ref="SecondInput"
+                  onChangeText={value => this.onChangeText('lastName', value)}
+                  selectionColor="white"
+                />
+              </Item>
 
-                  {/* email section */}
-                  <Item style={styles.itemStyle}>
-                    <Ionicons name="ios-mail" style={styles.iconStyle} />
-                    <Input
-                      style={styles.input}
-                      placeholder="Email"
-                      placeholderTextColor="#adb4bc"
-                      keyboardType={'email-address'}
-                      returnKeyType="next"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      secureTextEntry={false}
-                      ref="ThirdInput"
-                      onSubmitEditing={event => {
-                        this.refs.Third._root.focus();
-                      }}
-                      onChangeText={value => this.onChangeText('email', value)}
-                      onFocus={() => this.fadeOut()}
-                      onEndEditing={() => this.fadeIn()}
-                    />
-                  </Item>
+              {/* email section */}
+              <Item style={styles.itemStyle}>
+                <Ionicons name="ios-mail" style={styles.iconStyle} />
+                <Input
+                  style={styles.input}
+                  placeholder="Email"
+                  placeholderTextColor="#adb4bc"
+                  keyboardType={'email-address'}
+                  returnKeyType="next"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  secureTextEntry={false}
+                  ref="ThirdInput"
+                  onChangeText={value => this.onChangeText('email', value)}
+                />
+              </Item>
 
-                  {/*  password section  */}
-                  <Item style={styles.itemStyle}>
-                    <Ionicons name="ios-lock" style={styles.iconStyle} />
-                    <Input
-                      style={styles.input}
-                      placeholder="Password"
-                      placeholderTextColor="#adb4bc"
-                      returnKeyType="next"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      secureTextEntry={true}
-                      ref="ThirdInput"
-                      onSubmitEditing={event => {
-                        this.refs.FourthInput._root.focus();
-                      }}
-                      onChangeText={value =>
-                        this.onChangeText('password', value)
-                      }
-                      onFocus={() => this.fadeOut()}
-                      onEndEditing={() => this.fadeIn()}
-                    />
-                  </Item>
+              {/*  password section  */}
+              <Item style={styles.itemStyle}>
+                <Ionicons name="ios-lock" style={styles.iconStyle} />
+                <Input
+                  style={styles.input}
+                  placeholder="Password"
+                  placeholderTextColor="#adb4bc"
+                  returnKeyType="next"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  secureTextEntry={true}
+                  ref="ThirdInput"
+                  onChangeText={value => this.onChangeText('password', value)}
+                />
+              </Item>
 
-                  {/* phone section  */}
-                  <Item style={styles.itemStyle}>
-                    <Ionicons name="ios-call" style={styles.iconStyle} />
-                    {/* country flag */}
-                    <View>
-                      <Text style={{ fontSize: 30 }}>{flag}</Text>
-                    </View>
-                    {/* open modal */}
-                    <Ionicons
-                      name="md-arrow-dropdown"
-                      style={[styles.iconStyle, { marginLeft: 5 }]}
-                      onPress={() => this.showModal()}
-                    />
-                    <Input
-                      style={styles.input}
-                      placeholder="85757309..."
-                      placeholderTextColor="#adb4bc"
-                      keyboardType={'phone-pad'}
-                      returnKeyType="done"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      secureTextEntry={false}
-                      ref="FifthInput"
-                      value={this.state.phoneNumber}
-                      onChangeText={val => {
-                        if (this.state.phoneNumber === '') {
-                          // render UK phone code by default when Modal is not open
-                          this.onChangeText('phoneNumber', defaultCode + val);
-                        } else {
-                          // render country code based on users choice with Modal
-                          this.onChangeText('phoneNumber', val);
-                        }
-                      }}
-                      onFocus={() => this.fadeOut()}
-                      onEndEditing={() => this.fadeIn()}
-                    />
-                    {/* Modal for country code and flag */}
-                    <Modal
-                      animationType="slide" // fade
-                      transparent={false}
-                      visible={this.state.modalVisible}
-                    >
-                      <View style={{ flex: 1 }}>
-                        <View
-                          style={{
-                            flex: 10,
-                            paddingTop: 80,
-                            backgroundColor: '#0B7EA0'
-                          }}
-                        >
-                          <FlatList
-                            data={countryData}
-                            keyExtractor={(item, index) => index.toString()}
-                            renderItem={({ item }) => (
-                              <TouchableWithoutFeedback
-                                onPress={() => this.getCountry(item.name)}
-                              >
-                                <View
-                                  style={[
-                                    styles.countryStyle,
-                                    {
-                                      flexDirection: 'row',
-                                      alignItems: 'center',
-                                      justifyContent: 'space-between'
-                                    }
-                                  ]}
-                                >
-                                  <Text
-                                    style={{
-                                      fontSize: 25
-                                    }}
-                                  >
-                                    {item.flag}
-                                  </Text>
-                                  <Text
-                                    style={{
-                                      fontSize: 20,
-                                      color: '#fff'
-                                    }}
-                                  >
-                                    {item.name} ({item.dial_code})
-                                  </Text>
-                                </View>
-                              </TouchableWithoutFeedback>
-                            )}
-                          />
-                        </View>
-                        <TouchableOpacity
-                          onPress={() => this.hideModal()}
-                          style={styles.closeButtonStyle}
-                        >
-                          <Text style={styles.textStyle}>Close</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </Modal>
-                  </Item>
-                  <View style={{paddingBottom:10, paddingTop:10}}>
-                    {/* <Text style={{ fontSize: 15, color: 'white' }}>Preferred Measurement</Text> */}
-                    <RadioForm
-                      ref="radioForm"
-                      radio_props={this.preferredMeasureSize}
-                      initial={this.preferredMeasureSize[0]}
-                      formHorizontal={true}
-                      labelHorizontal={true}
-                      buttonColor={'#2196f3'}
-                      animation={true}
-                      buttonSize={20}
-                      buttonOuterSize={30}
-                      labelStyle={{ fontSize: 15, color: 'white' }}
-                      onPress={value => {
-                        this.setState({ preferredMeasure: value });
-                      }}
-                    />
-                  </View>
+              {/*  password section  */}
+              <Item style={styles.itemStyle}>
+                <Ionicons name="ios-lock" style={styles.iconStyle} />
+                <Input
+                  style={styles.input}
+                  placeholder="Membership Code"
+                  placeholderTextColor="#adb4bc"
+                  returnKeyType="next"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  secureTextEntry={true}
+                  ref="ThirdInput"
+                  onSubmitEditing={() => {
+                    this.refs.FourthInput._root.focus();
+                  }}
+                  value={this.state.membershipCode}
+                  onChangeText={value =>
+                    this.onChangeText('membershipCode', value)
+                  }
+                />
+              </Item>
 
-                  <TouchableOpacity
-                    onPress={() => this.signUp()}
-                    style={[
-                      styles.buttonStyle,
-                      {
-                        backgroundColor: this.state.isSignUpDisabled
-                          ? '#607D8B'
-                          : '#009688'
-                      }
-                    ]}
-                    activeOpacity={0.5}
-                    disabled={this.state.isSignUpDisabled}
-                  >
-                    <Text style={styles.buttonText}>Sign Up</Text>
-                  </TouchableOpacity>
-                  {/* code confirmation section  */}
-                  <Item style={styles.itemStyle}>
-                    <Ionicons name="md-apps" style={styles.iconStyle} />
-                    <Input
-                      style={styles.input}
-                      placeholder="Confirmation code"
-                      placeholderTextColor="#adb4bc"
-                      keyboardType={'numeric'}
-                      returnKeyType="done"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      secureTextEntry={false}
-                      onChangeText={value =>
-                        this.onChangeText('authCode', value)
-                      }
-                      onFocus={() => this.fadeOut()}
-                      onEndEditing={() => this.fadeIn()}
-                    />
-                  </Item>
-                  <TouchableOpacity
-                    onPress={() => this.confirmSignUp()}
-                    style={[
-                      styles.buttonStyle,
-                      {
-                        backgroundColor: this.state.isSignUpDisabled
-                          ? '#607D8B'
-                          : '#009688'
-                      }
-                    ]}
-                    activeOpacity={0.5}
-                    disabled={this.state.isSignUpDisabled}
-                  >
-                    <Text style={styles.buttonText}>Confirm Sign Up</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => this.resendSignUp()}
-                    style={styles.buttonStyle}
-                    style={[
-                      styles.buttonStyle,
-                      {
-                        backgroundColor: this.state.isConfirmDisabled
-                          ? '#607D8B'
-                          : '#009688'
-                      }
-                    ]}
-                    activeOpacity={0.5}
-                    disabled={this.state.isConfirmDisabled}
-                  >
-                    <Text style={styles.buttonText}>Resend code</Text>
-                  </TouchableOpacity>
+              {/* phone section  */}
+              <Item style={styles.itemStyle}>
+                <Ionicons name="ios-call" style={styles.iconStyle} />
+                {/* country flag */}
+                <View>
+                  <Text style={{ fontSize: 30 }}>{flag}</Text>
                 </View>
-              </Container>
+                {/* open modal */}
+                <Ionicons
+                  name="md-arrow-dropdown"
+                  style={[styles.iconStyle, { marginLeft: 5 }]}
+                  onPress={() => this.showModal()}
+                />
+                <Input
+                  style={styles.input}
+                  placeholder="85757309..."
+                  placeholderTextColor="#adb4bc"
+                  keyboardType={'phone-pad'}
+                  returnKeyType="done"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  secureTextEntry={false}
+                  ref="FifthInput"
+                  value={this.state.phoneNumber}
+                  onChangeText={val => {
+                    if (this.state.phoneNumber === '') {
+                      this.onChangeText('phoneNumber', defaultCode + val);
+                    } else {
+                      // render country code based on users choice with Modal
+                      this.onChangeText('phoneNumber', val);
+                    }
+                  }}
+                />
+                {/* Modal for country code and flag */}
+                <Modal
+                  animationType="slide" // fade
+                  transparent={false}
+                  visible={this.state.modalVisible}
+                >
+                  <View style={{ flex: 1 }}>
+                    <View
+                      style={{
+                        flex: 10,
+                        paddingTop: 80,
+                        backgroundColor: '#0B7EA0'
+                      }}
+                    >
+                      <FlatList
+                        data={countryData}
+                        keyExtractor={(item, index) => index.toString()}
+                        renderItem={({ item }) => (
+                          <TouchableWithoutFeedback
+                            onPress={() => this.getCountry(item.name)}
+                          >
+                            <View
+                              style={[
+                                styles.countryStyle,
+                                {
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between'
+                                }
+                              ]}
+                            >
+                              <Text
+                                style={{
+                                  fontSize: 25
+                                }}
+                              >
+                                {item.flag}
+                              </Text>
+                              <Text
+                                style={{
+                                  fontSize: 20,
+                                  color: '#fff'
+                                }}
+                              >
+                                {item.name} ({item.dial_code})
+                              </Text>
+                            </View>
+                          </TouchableWithoutFeedback>
+                        )}
+                      />
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => this.hideModal()}
+                      style={styles.closeButtonStyle}
+                    >
+                      <Text style={styles.textStyle}>Close</Text>
+                    </TouchableOpacity>
+                  </View>
+                </Modal>
+              </Item>
+              <View style={{ paddingBottom: 10, paddingTop: 10 }}>
+                {/* <Text style={{ fontSize: 15, color: 'white' }}>Preferred Measurement</Text> */}
+                <RadioForm
+                  ref="radioForm"
+                  radio_props={this.preferredMeasureSize}
+                  initial={this.preferredMeasureSize[0]}
+                  formHorizontal={true}
+                  labelHorizontal={true}
+                  buttonColor={'#2196f3'}
+                  animation={true}
+                  buttonSize={20}
+                  buttonOuterSize={30}
+                  labelStyle={{ fontSize: 15, color: 'white' }}
+                  onPress={value => {
+                    this.setState({ preferredMeasure: value });
+                  }}
+                />
+              </View>
+
+              <TouchableOpacity
+                onPress={() => this.signUp()}
+                style={[
+                  styles.buttonStyle,
+                  {
+                    backgroundColor: enableRegistration ? '#ccc' : '#009688'
+                  }
+                ]}
+                activeOpacity={0.5}
+                disabled={enableRegistration}
+              >
+                <Text style={styles.buttonText}>Sign Up</Text>
+
+                {this.state.loading ? <Spinner color="green" /> : null}
+              </TouchableOpacity>
+              {/* code confirmation section  */}
+              <Item style={styles.itemStyle}>
+                <Ionicons name="md-apps" style={styles.iconStyle} />
+                <Input
+                  style={styles.input}
+                  placeholder="Confirmation code"
+                  placeholderTextColor="#adb4bc"
+                  keyboardType={'numeric'}
+                  returnKeyType="done"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  secureTextEntry={false}
+                  onChangeText={value => this.onChangeText('authCode', value)}
+                />
+              </Item>
+              <TouchableOpacity
+                onPress={() => this.confirmSignUp()}
+                style={[
+                  styles.buttonStyle,
+                  {
+                    backgroundColor: this.state.isConfirmDisabled
+                      ? '#ccc'
+                      : '#009688'
+                  }
+                ]}
+                activeOpacity={0.5}
+                disabled={this.state.isSignUpDisabled}
+              >
+                <Text style={styles.buttonText}>Confirm Sign Up</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => this.resendSignUp()}
+                style={styles.buttonStyle}
+                style={[
+                  styles.buttonStyle,
+                  {
+                    backgroundColor: this.state.isConfirmDisabled
+                      ? '#ccc'
+                      : '#009688'
+                  }
+                ]}
+                activeOpacity={0.5}
+                disabled={this.state.isConfirmDisabled}
+              >
+                <Text style={styles.buttonText}>Resend code</Text>
+              </TouchableOpacity>
             </View>
-          </TouchableWithoutFeedback>
+          </Container>
         </KeyboardAvoidingView>
       </SafeAreaView>
     );
@@ -520,10 +521,11 @@ const styles = StyleSheet.create({
     flexDirection: 'column'
   },
   input: {
-    flex: 1,
-    fontSize: 17,
-    fontWeight: 'bold',
-    color: '#fff'
+    height: 50,
+    color: 'white',
+    fontSize: 20,
+    padding: 5,
+    borderRadius: 4
   },
   radio: {
     flex: 1,
@@ -534,7 +536,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 570,
-    top:20,
+    top: 20,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -554,14 +556,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#00BCB4',
     padding: 14,
     marginBottom: 10,
-    borderRadius: 4,
-   
+    borderRadius: 4
   },
   buttonText: {
     fontWeight: 'bold',
     fontSize: 21,
     padding: 2,
-    color: '#fff',
+    color: '#fff'
   },
   logoContainer: {
     position: 'absolute',
