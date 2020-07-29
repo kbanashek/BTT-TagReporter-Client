@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-navigation';
 import { Item, Input, Toast } from 'native-base';
 import { connect } from 'react-redux';
+import { Ionicons } from '@expo/vector-icons';
 import NetInfo from '@react-native-community/netinfo';
 import RNPickerSelect from 'react-native-picker-select';
 import { API, graphqlOperation, Auth } from 'aws-amplify';
@@ -25,6 +26,7 @@ import { IsConnected } from '../../components/network/IsConnected';
 import * as mutations from '../../graphql/mutations';
 import species from '../data/species';
 import locations from '../data/locations';
+import COLORS from '../../constants/constants';
 
 class HomeScreen extends React.Component {
   constructor(props) {
@@ -316,7 +318,7 @@ class HomeScreen extends React.Component {
               <Item style={styles.itemStyle}>
                 <Input
                   style={styles.input}
-                  placeholderTextColor="#adb4bc"
+                  placeholderTextColor={COLORS.MEDIUM_GREY}
                   onChangeText={v => this.onChange('tagNumber', v)}
                   value={this.state.tagNumber}
                   placeholder="Tag Number"
@@ -325,7 +327,7 @@ class HomeScreen extends React.Component {
               <Item style={styles.itemStyle}>
                 <Input
                   style={styles.input}
-                  placeholderTextColor="#adb4bc"
+                  placeholderTextColor={COLORS.MEDIUM_GREY}
                   onChangeText={v => this.onChange('fishLength', v)}
                   value={this.state.fishLength}
                   placeholder="Fish Length"
@@ -334,7 +336,7 @@ class HomeScreen extends React.Component {
               </Item>
               <Item style={styles.itemStyle}>
                 <Input
-                  placeholderTextColor="#adb4bc"
+                  placeholderTextColor={COLORS.MEDIUM_GREY}
                   style={styles.textInput}
                   onChangeText={v => this.onChange('comment', v)}
                   value={this.state.comment}
@@ -375,7 +377,10 @@ class HomeScreen extends React.Component {
 
   renderLocation = () => {
     return this.state.tagArea ? (
-      <Text style={styles.locationText}>{this.state.tagArea}</Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+         <Ionicons name="ios-pin" style={styles.iconStyle} />
+        <Text style={styles.locationText}>{this.state.tagArea}</Text>
+      </View>
     ) : null;
   };
 
@@ -403,16 +408,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#0B7EA0'
   },
   paragraph: {
-    margin: 10,
     fontSize: 17,
     textAlign: 'center',
     color: '#efefef',
     marginBottom: 30
   },
   locationText: {
-   // fontFamily: 'PermanentMarker-Regular',
     margin: 10,
-    fontSize: 22,
+    fontSize: 24,
     textAlign: 'center',
     color: '#efefef',
     marginBottom: 30
@@ -441,34 +444,46 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 24,
     fontWeight: 'bold',
-    //fontFamily: 'PermanentMarker-Regular'
   },
   textInput: {
-    flex: 1,
-    fontSize: 17,
-    fontWeight: 'bold',
-    color: '#fff'
+    width: '80%',
+    backgroundColor: COLORS.LIGHT_GREY,
+    color: COLORS.DARK_GREY,
+    borderRadius: 4,
+    height: 50,
+    marginBottom: 20,
+    paddingLeft: 20,
+    justifyContent: 'center',
+    fontSize: 20,
   },
   input: {
-    flex: 1,
-    fontSize: 17,
-    fontWeight: 'bold',
-    color: '#fff'
+    height: 50,
+    fontSize: 20,
+    padding: 15,
+    borderRadius: 4,
+    paddingLeft: 20,
+    color: COLORS.DARK_GREY,
+    backgroundColor: COLORS.LIGHT_GREY
   },
-
   itemStyle: {
-    marginBottom: 10
+    marginBottom: 20
   },
   dropDownInput: {
     height: 55,
     margin: 5,
+    marginBottom: 20,
     width: Platform.OS === 'ios' ? 340 : 370,
     borderColor: '#efefef',
     borderWidth: 0.5,
     fontSize: 18,
     fontWeight: 'bold',
     color: '#fff'
-  }
+  },
+  iconStyle: {
+    color: '#fff',
+    fontSize: 17,
+    marginTop: 20
+  },
 });
 
 const pickerStyles = StyleSheet.create({

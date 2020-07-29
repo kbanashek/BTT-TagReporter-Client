@@ -13,11 +13,19 @@ import {
   TouchableWithoutFeedback,
   Animated,
   Alert,
+  ActivityIndicator,
+  ColorPropType
 } from 'react-native';
+import { NavigationEvents } from 'react-navigation';
 import Auth from '@aws-amplify/auth';
+import { Item, Input } from 'native-base';
+import { Ionicons } from '@expo/vector-icons';
+import COLORS from '../../constants/constants';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
+
+export const { width, height } = Dimensions.get('window');
 
 const logo = require('../images/site-logo.png');
-export const { width, height } = Dimensions.get('window');
 
 export default class App extends React.Component {
   state = {
@@ -29,7 +37,8 @@ export default class App extends React.Component {
     fadeIn: new Animated.Value(0),
     fadeOut: new Animated.Value(0),
     isHidden: false,
-    isSignInDisabled: true
+    isSignInDisabled: true,
+    isLoading: false
   };
 
   componentDidMount = () => {
@@ -53,7 +62,19 @@ export default class App extends React.Component {
   componentWillUnmount() {
     this.keyboardDidShowListener.remove();
     this.keyboardDidHideListener.remove();
+    
   }
+
+  checkForUserName = () => {
+    console.log('*****SignInProps', this.props.navigation.state.params);
+    if (
+      this.props.navigation.state.params &&
+      this.props.navigation.state.params.email
+    ) {
+      console.log('*****', this.props.navigation.state.params.email);
+      this.setState({ username: this.props.navigation.state.params.email });
+    }
+  };
 
   fadeIn() {
     Animated.timing(this.state.fadeIn, {
@@ -72,27 +93,28 @@ export default class App extends React.Component {
     }).start();
     this.setState({ isHidden: false });
   }
-
   onChangeText(key, value) {
     this.setState({
       [key]: value
     });
 
     const { username, password } = this.state;
-       this.setState({
-          isSignInDisabled: username && password ? false: true
-        });
-       
+    this.setState({
+      isSignInDisabled: username && password ? false : true
+    });
   }
-
   async signIn() {
     const { username, password } = this.state;
+
+    this.setState({ isLoading: true });
+
     await Auth.signIn(username, password)
       .then(user => {
-        this.setState({ user });
+        this.setState({ user, isLoading: false });
         this.props.navigation.navigate('Authloading');
       })
       .catch(err => {
+        this.setState({ isLoading: false });
         if (!err.message) {
           console.log('Error when signing in: ', err);
           Alert.alert('Error when signing in: ', err);
@@ -104,7 +126,7 @@ export default class App extends React.Component {
   }
 
   render() {
-    const { showImage } = this.state;
+    const { showImage, isLoading, username } = this.state;
 
     return (
       <KeyboardAvoidingView
@@ -114,69 +136,88 @@ export default class App extends React.Component {
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.innerContainer}>
+            <NavigationEvents onDidFocus={() => this.checkForUserName()} />
+            <ActivityIndicator
+              animating={isLoading}
+              color="#bc2b78" // color of your choice
+              size="large"
+              style={styles.activityIndicator}
+            />
             {showImage ? (
-             
-                <Image
-                  source={logo}
-                  style={{ transform: [{ scale: 1.5 }],width: 200, height: 120, paddingBottom:100,marginBottom: 40, }}
-                  resizeMode="contain"
-                />
-            
+              <Image
+                source={logo}
+                style={{
+                  transform: [{ scale: 1.5 }],
+                  width: 200,
+                  height: 120,
+                  paddingBottom: 100,
+                  marginBottom: 40
+                }}
+                resizeMode="contain"
+              />
             ) : null}
 
             <View style={styles.inputView}>
-              <TextInput
-                style={styles.inputText}
-                placeholderTextColor="#efefef"
-                placeholder="Email"
-                keyboardType={'email-address'}
-                returnKeyType="next"
-                autoCapitalize="none"
-                autoCorrect={false}
-                onSubmitEditing={event => {
-                  this.refs.SecondInput._root.focus();
-                }}
-                onChangeText={value => this.onChangeText('username', value)}
-                onFocus={() => this.fadeOut()}
-                onEndEditing={() => this.fadeIn()}
-              />
+              <Item>
+                <Ionicons name="ios-mail" style={styles.iconStyle} />
+                <Input
+                  style={styles.inputText}
+                  placeholderTextColor={COLORS.MEDIUM_GREY}
+                  placeholder="Email"
+                  keyboardType={'email-address'}
+                  returnKeyType="next"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  onSubmitEditing={event => {
+                    this.refs.SecondInput._root.focus();
+                  }}
+                  value={username}
+                  onChangeText={value => this.onChangeText('username', value)}
+                />
+              </Item>
             </View>
             <View style={styles.inputView}>
-              <TextInput
-                secureTextEntry
-                style={styles.inputText}
-                placeholder="Password"
-                placeholderTextColor="#efefef"
-                returnKeyType="go"
-                autoCapitalize="none"
-                autoCorrect={false}
-                secureTextEntry={true}
-                ref="SecondInput"
-                onChangeText={value =>
-                  this.onChangeText('password', value)
-                }
-                onFocus={() => this.fadeOut()}
-                onEndEditing={() => this.fadeIn()}
-              />
+              <Item>
+                <Ionicons name="ios-lock" style={styles.iconStyle} />
+                <Input
+                  secureTextEntry
+                  style={styles.inputText}
+                  placeholder="Password"
+                  placeholderTextColor={COLORS.MEDIUM_GREY}
+                  returnKeyType="go"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  secureTextEntry={true}
+                  ref="SecondInput"
+                  onChangeText={value => this.onChangeText('password', value)}
+                  onFocus={() => this.fadeOut()}
+                  onEndEditing={() => this.fadeIn()}
+                />
+              </Item>
             </View>
-            <TouchableOpacity onPress={()=> this.props.navigation.navigate('ForgetPassword')}>
+            <TouchableOpacity
+              onPress={() => this.props.navigation.navigate('ForgetPassword')}
+            >
               <Text style={styles.forgot}>Forgot Password?</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => this.signIn()}
               style={[
                 styles.loginBtn,
                 {
                   backgroundColor: this.state.isSignInDisabled
                     ? '#ccc'
-                    : '#009688',
-                },
+                    : '#009688'
+                }
               ]}
-            activeOpacity={0.5}
-            disabled={this.state.isSignInDisabled}>
+              activeOpacity={0.5}
+              disabled={this.state.isSignInDisabled || isLoading}
+            >
               <Text style={styles.loginText}>LOGIN</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={()=> this.props.navigation.navigate('SignUp')}>
+            <TouchableOpacity
+              onPress={() => this.props.navigation.navigate('SignUp')}
+            >
               <Text style={styles.loginText}>Signup</Text>
             </TouchableOpacity>
           </View>
@@ -204,8 +245,9 @@ const styles = StyleSheet.create({
     height: 180
   },
   inputView: {
-    width: '80%',
-    backgroundColor: '#00BCB4',
+    width: 350,
+    backgroundColor: COLORS.LIGHT_GREY,
+    color: COLORS.DARK_GREY,
     borderRadius: 4,
     height: 50,
     marginBottom: 20,
@@ -214,7 +256,7 @@ const styles = StyleSheet.create({
   },
   inputText: {
     height: 50,
-    color: 'white',
+
     fontSize: 20
   },
   forgot: {
@@ -223,18 +265,24 @@ const styles = StyleSheet.create({
   },
   loginBtn: {
     width: '80%',
-    backgroundColor: '#00BCB4',
-    borderRadius: 4,
-    height: 50,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 40,
-    marginBottom: 10
+    marginBottom: 10,
+    alignItems: 'center',
+    backgroundColor: '#00BCB4',
+    padding: 14,
+    borderRadius: 4
   },
   loginText: {
     fontWeight: 'bold',
     fontSize: 21,
     padding: 2,
     color: '#fff'
+  },
+  iconStyle: {
+    color: COLORS.MEDIUM_GREY,
+    fontSize: 18,
+    marginRight: 10
   }
 });

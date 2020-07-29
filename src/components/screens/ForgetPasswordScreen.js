@@ -15,11 +15,9 @@ import {
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
-
 import { Item, Input } from 'native-base';
-
-// AWS Amplify modular import
 import Auth from '@aws-amplify/auth';
+import COLORS from '../../constants/constants';
 
 export default class ForgetPasswordScreen extends React.Component {
   state = {
@@ -109,7 +107,7 @@ export default class ForgetPasswordScreen extends React.Component {
                     <Input
                       style={styles.input}
                       placeholder="Username"
-                      placeholderTextColor="#adb4bc"
+                      placeholderTextColor={COLORS.MEDIUM_GREY}
                       keyboardType={'email-address'}
                       returnKeyType="go"
                       autoCapitalize="none"
@@ -133,7 +131,7 @@ export default class ForgetPasswordScreen extends React.Component {
                     <Input
                       style={styles.input}
                       placeholder="New password"
-                      placeholderTextColor="#adb4bc"
+                      placeholderTextColor={COLORS.MEDIUM_GREY}
                       returnKeyType="next"
                       autoCapitalize="none"
                       autoCorrect={false}
@@ -154,7 +152,7 @@ export default class ForgetPasswordScreen extends React.Component {
                     <Input
                       style={styles.input}
                       placeholder="Confirmation code"
-                      placeholderTextColor="#adb4bc"
+                      placeholderTextColor={COLORS.MEDIUM_GREY}
                       keyboardType={'numeric'}
                       returnKeyType="done"
                       autoCapitalize="none"

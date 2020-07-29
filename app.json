@@ -14,7 +14,7 @@
     "icon": "./assets/icon.png",
     "android": {
       "package": "com.btt.tagreporter.client",
-      "versionCode": 3,
+      "versionCode": 5,
       "splash": {
         "mdpi": "./assets/splash-mdpi.png",
         "hdpi": "./assets/splash-hdpi.png",
@@ -43,7 +43,8 @@
         "resizeMode": "contain",
         "backgroundColor": "#0B7EA0"
       },
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.btt.tagreporter.client"
     },
     "updates": {
       "fallbackToCacheTimeout": 300000

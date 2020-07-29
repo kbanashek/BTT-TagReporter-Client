@@ -8,7 +8,7 @@ const logo = require('../images/site-logo.png');
 
 export default class WelcomeScreen extends React.Component {
   handleRoute = async destination => {
-     this.props.navigation.navigate(destination);
+    this.props.navigation.navigate(destination);
   };
 
   state = {
@@ -25,6 +25,21 @@ export default class WelcomeScreen extends React.Component {
   async componentDidMount() {
     this.loadFontsAsync();
   }
+
+  componentWillUnmount() {
+    this.willFocusListener.remove();
+  }
+
+  willFocusListener = this.props.navigation.addListener('willFocus', () => {
+    if (
+      this.props.navigation.state.params &&
+      this.props.navigation.state.params.email
+    ) {
+      const email = this.props.navigation.state.params.email;
+      console.log('Setting EmAIL*****', email);
+      this.props.navigation.navigate('SignIn', { email });
+    }
+  });
 
   render() {
     if (this.state.fontsLoaded) {
@@ -82,7 +97,7 @@ export default class WelcomeScreen extends React.Component {
         </View>
       );
     } else {
-      return (<AppLoading />);
+      return <AppLoading />;
     }
   }
 }

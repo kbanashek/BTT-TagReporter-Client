@@ -14,6 +14,7 @@ import {
 import { Container, Item, Input } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
 import Auth from '@aws-amplify/auth';
+import COLORS from '../../constants/constants';
 
 export default class SettingsScreen extends React.Component {
   state = {
@@ -93,7 +94,7 @@ export default class SettingsScreen extends React.Component {
                     <Input
                       style={styles.input}
                       placeholder="Old password"
-                      placeholderTextColor="#adb4bc"
+                      placeholderTextColor={COLORS.MEDIUM_GREY}
                       returnKeyType="next"
                       autoCapitalize="none"
                       autoCorrect={false}
@@ -112,7 +113,7 @@ export default class SettingsScreen extends React.Component {
                     <Input
                       style={styles.input}
                       placeholder="New password"
-                      placeholderTextColor="#adb4bc"
+                      placeholderTextColor={COLORS.MEDIUM_GREY}
                       returnKeyType="go"
                       autoCapitalize="none"
                       autoCorrect={false}

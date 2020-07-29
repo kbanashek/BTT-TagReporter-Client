@@ -4,23 +4,19 @@ import {
   SafeAreaView,
   View,
   Text,
-  Image,
   ImageBackground
 } from 'react-native';
 import { API, graphqlOperation } from 'aws-amplify';
 import {
   Container,
-  Header,
   Content,
   List,
   ListItem,
   Left,
-  Body,
-  Right,
-  Button
-} from 'native-base';
+  Body} from 'native-base';
 import moment from 'moment';
 import * as Font from 'expo-font';
+import { Ionicons } from '@expo/vector-icons';
 import * as queries from '../../graphql/queries';
 
 const bonefish = require('../../../assets/bonefish.png');
@@ -151,11 +147,14 @@ export default class TagLogScreen extends React.Component {
                         Captain: {tagReport.guideName}
                       </Text>
                       <Text note numberOfLines={2} style={styles.textStyle}>
-                        {moment(tagReport.tagDate).format('dddd, MMMM Do YYYY')}
+                        {moment(tagReport.tagDate).format(' MMMM Do YYYY')}
                       </Text>
+                      <View style={{ flexDirection: 'row' }}>
+                      <Ionicons name="ios-pin" style={styles.iconStyle} />
                       <Text note numberOfLines={2} style={styles.textStyle}>
                         {tagReport.tagArea}
                       </Text>
+                      </View>
                       {/* <Text note numberOfLines={1} style={styles.textStyle}>
                        {tagReport.fishLength}
                       </Text> */}
@@ -187,7 +186,8 @@ const styles = StyleSheet.create({
   textStyle: {
     fontSize: 14,
     padding: 2,
-    color: '#fff'
+    color: '#fff',
+    fontWeight: 'bold',
   },
   textStyleSM: {
     fontSize: 18,
@@ -200,5 +200,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: 'PermanentMarker-Regular',
     color: '#fff'
-  }
+  },
+  iconStyle: {
+    color: '#fff',
+    fontSize: 15,
+    marginTop: 5, paddingRight: 3
+  },
 });
