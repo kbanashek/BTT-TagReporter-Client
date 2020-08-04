@@ -21,6 +21,9 @@ export const createTagReports = /* GraphQL */ `
       phone
       pictureUrl
       owner
+      recapture
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -44,6 +47,9 @@ export const updateTagReports = /* GraphQL */ `
       phone
       pictureUrl
       owner
+      recapture
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -67,6 +73,9 @@ export const deleteTagReports = /* GraphQL */ `
       phone
       pictureUrl
       owner
+      recapture
+      createdAt
+      updatedAt
     }
   }
 `;

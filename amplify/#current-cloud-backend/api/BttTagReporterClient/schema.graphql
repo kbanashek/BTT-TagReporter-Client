@@ -23,4 +23,5 @@ type TagReports
   phone: String!
   pictureUrl: String
   owner: String
+  recapture: String
 }

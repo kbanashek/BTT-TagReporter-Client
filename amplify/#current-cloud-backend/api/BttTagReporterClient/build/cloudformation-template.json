@@ -129,24 +129,11 @@
                         {
                             "Ref": "APIKeyExpirationEpoch"
                         },
-                        1583677748
+                        1597106124
                     ]
                 }
             },
             "Condition": "ShouldCreateAPIKey"
-        },
-        "NoneDataSource": {
-            "Type": "AWS::AppSync::DataSource",
-            "Properties": {
-                "ApiId": {
-                    "Fn::GetAtt": [
-                        "GraphQLAPI",
-                        "ApiId"
-                    ]
-                },
-                "Name": "NONE",
-                "Type": "NONE"
-            }
         },
         "GraphQLSchema": {
             "Type": "AWS::AppSync::GraphQLSchema",
@@ -243,8 +230,7 @@
                 }
             },
             "DependsOn": [
-                "GraphQLSchema",
-                "NoneDataSource"
+                "GraphQLSchema"
             ]
         },
         "CustomResourcesjson": {

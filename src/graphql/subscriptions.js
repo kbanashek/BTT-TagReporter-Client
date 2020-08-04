@@ -2,8 +2,8 @@
 // this is an auto generated file. This will be overwritten
 
 export const onCreateTagReports = /* GraphQL */ `
-  subscription OnCreateTagReports($owner: String!) {
-    onCreateTagReports(owner: $owner) {
+  subscription OnCreateTagReports {
+    onCreateTagReports {
       id
       tagNumber
       fishType
@@ -18,12 +18,15 @@ export const onCreateTagReports = /* GraphQL */ `
       phone
       pictureUrl
       owner
+      recapture
+      createdAt
+      updatedAt
     }
   }
 `;
 export const onUpdateTagReports = /* GraphQL */ `
-  subscription OnUpdateTagReports($owner: String!) {
-    onUpdateTagReports(owner: $owner) {
+  subscription OnUpdateTagReports {
+    onUpdateTagReports {
       id
       tagNumber
       fishType
@@ -38,12 +41,15 @@ export const onUpdateTagReports = /* GraphQL */ `
       phone
       pictureUrl
       owner
+      recapture
+      createdAt
+      updatedAt
     }
   }
 `;
 export const onDeleteTagReports = /* GraphQL */ `
-  subscription OnDeleteTagReports($owner: String!) {
-    onDeleteTagReports(owner: $owner) {
+  subscription OnDeleteTagReports {
+    onDeleteTagReports {
       id
       tagNumber
       fishType
@@ -58,6 +64,9 @@ export const onDeleteTagReports = /* GraphQL */ `
       phone
       pictureUrl
       owner
+      recapture
+      createdAt
+      updatedAt
     }
   }
 `;

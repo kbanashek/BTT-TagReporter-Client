@@ -18,16 +18,19 @@ export const getTagReports = /* GraphQL */ `
       phone
       pictureUrl
       owner
+      recapture
+      createdAt
+      updatedAt
     }
   }
 `;
 export const listTagReportss = /* GraphQL */ `
   query ListTagReportss(
     $filter: ModelTagReportsFilterInput
-   
+    $limit: Int
     $nextToken: String
   ) {
-    listTagReportss(filter: $filter, limit: 100, nextToken: $nextToken) {
+    listTagReportss(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
         tagNumber
@@ -43,6 +46,9 @@ export const listTagReportss = /* GraphQL */ `
         phone
         pictureUrl
         owner
+        recapture
+        createdAt
+        updatedAt
       }
       nextToken
     }

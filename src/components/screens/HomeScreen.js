@@ -9,6 +9,7 @@ import {
   Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-navigation';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Item, Input, Toast } from 'native-base';
 import { connect } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
@@ -199,7 +200,8 @@ class HomeScreen extends React.Component {
       tagLocation: location,
       fishLength: fishLength + ' ' + user['custom:preferredMeasure'],
       guideName: user['custom:firstName'] + ' ' + user['custom:lastName'],
-      phone: phone_number
+      phone: phone_number,
+      recapture : 'false'
     };
   };
 
@@ -278,107 +280,98 @@ class HomeScreen extends React.Component {
     }
 
     return (
-      <SafeAreaView style={styles.container}>
-        <KeyboardAvoidingView>
-          <ScrollView>
-            <View
+      <KeyboardAwareScrollView
+        style={styles.screen}
+        enableOnAndroid={true}
+        enableAutoAutomaticScroll="true"
+        keyboardOpeningTime={0}
+        extraScrollHeight={50}
+      >
+        <View style={styles.container}>
+          {this.getConnectionInfo()}
+          {this.renderLocation()}
+          <Text style={styles.paragraph}>{message}</Text>
+          <RadioForm
+            ref="radioForm"
+            radio_props={species}
+            initial={this.state.fishType}
+            formHorizontal={true}
+            labelHorizontal={true}
+            buttonColor={'#2196f3'}
+            animation={true}
+            buttonSize={50}
+            buttonOuterSize={55}
+            labelStyle={{
+              fontSize: 17,
+              color: 'white',
+              padding: 10,
+              paddingBottom: 30
+            }}
+            onPress={value => {
+              this.setState({ fishType: value });
+            }}
+          />
+          <View style={styles.dropDownInput}>{this.renderLocationTag()}</View>
+          <Item style={styles.itemStyle}>
+            <Input
+              style={styles.input}
+              placeholderTextColor={COLORS.MEDIUM_GREY}
+              onChangeText={v => this.onChange('tagNumber', v)}
+              value={this.state.tagNumber}
+              placeholder="Tag Number (do not include prefix)"
+            />
+          </Item>
+          <Item style={styles.itemStyle}>
+            <Input
+              style={styles.input}
+              placeholderTextColor={COLORS.MEDIUM_GREY}
+              onChangeText={v => this.onChange('fishLength', v)}
+              value={this.state.fishLength}
+              placeholder="Fish Length"
+              keyboardType={'phone-pad'}
+            />
+          </Item>
+          <Item style={styles.itemStyle}>
+            <Input
+              placeholderTextColor={COLORS.MEDIUM_GREY}
+              style={styles.textInput}
+              onChangeText={v => this.onChange('comment', v)}
+              value={this.state.comment}
+              placeholder="Comment"
+            />
+          </Item>
+          <View style={styles.loginButtonSection}>
+            <TouchableOpacity
+              onPress={() => this.createTagReport()}
               style={[
-                styles.container,
+                styles.buttonStyle,
                 {
-                  margin: 20
+                  backgroundColor: this.state.isDisabled ? '#efefef' : '#00BCB4'
                 }
               ]}
+              disabled={this.state.isDisabled}
             >
-              {this.getConnectionInfo()}
-              {this.renderLocation()}
-              <Text style={styles.paragraph}>{message}</Text>
-              <RadioForm
-                ref="radioForm"
-                radio_props={species}
-                initial={this.state.fishType}
-                formHorizontal={true}
-                labelHorizontal={true}
-                buttonColor={'#2196f3'}
-                animation={true}
-                buttonSize={50}
-                buttonOuterSize={55}
-                labelStyle={{
-                  fontSize: 17,
-                  color: 'white',
-                  padding: 10,
-                  paddingBottom: 30
-                }}
-                onPress={value => {
-                  this.setState({ fishType: value });
-                }}
-              />
-              <View style={styles.dropDownInput}>
-                {this.renderLocationTag()}
-              </View>
-              <Item style={styles.itemStyle}>
-                <Input
-                  style={styles.input}
-                  placeholderTextColor={COLORS.MEDIUM_GREY}
-                  onChangeText={v => this.onChange('tagNumber', v)}
-                  value={this.state.tagNumber}
-                  placeholder="Tag Number"
-                />
-              </Item>
-              <Item style={styles.itemStyle}>
-                <Input
-                  style={styles.input}
-                  placeholderTextColor={COLORS.MEDIUM_GREY}
-                  onChangeText={v => this.onChange('fishLength', v)}
-                  value={this.state.fishLength}
-                  placeholder="Fish Length"
-                  keyboardType={'phone-pad'}
-                />
-              </Item>
-              <Item style={styles.itemStyle}>
-                <Input
-                  placeholderTextColor={COLORS.MEDIUM_GREY}
-                  style={styles.textInput}
-                  onChangeText={v => this.onChange('comment', v)}
-                  value={this.state.comment}
-                  placeholder="Comment"
-                />
-              </Item>
-              <View style={styles.loginButtonSection}>
-                <TouchableOpacity
-                  onPress={() => this.createTagReport()}
-                  style={[
-                    styles.buttonStyle,
-                    {
-                      backgroundColor: this.state.isDisabled
-                        ? '#efefef'
-                        : '#00BCB4'
-                    }
-                  ]}
-                  disabled={this.state.isDisabled}
-                >
-                  <Text
-                    style={[
-                      styles.buttonText,
-                      {
-                        color: this.state.isDisabled ? '#ccc' : '#fff'
-                      }
-                    ]}
-                  >
-                    Submit Tag Report
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+              <Text
+                style={[
+                  styles.buttonText,
+                  {
+                    color: this.state.isDisabled ? '#ccc' : '#fff'
+                  }
+                ]}
+              >
+                Submit Tag Report
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAwareScrollView>
     );
   }
 
   renderLocation = () => {
     return this.state.tagArea ? (
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-         <Ionicons name="ios-pin" style={styles.iconStyle} />
+        <Ionicons name="ios-pin" style={styles.iconStyle} />
         <Text style={styles.locationText}>{this.state.tagArea}</Text>
       </View>
     ) : null;
@@ -405,6 +398,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'column',
+    backgroundColor: '#0B7EA0',
+    paddingLeft: 20,
+    paddingRight: 20,
+    paddingTop: 20
+  },
+  screen: {
     backgroundColor: '#0B7EA0'
   },
   paragraph: {
@@ -443,7 +442,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: 'bold'
   },
   textInput: {
     width: '80%',
@@ -454,7 +453,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingLeft: 20,
     justifyContent: 'center',
-    fontSize: 20,
+    fontSize: 20
   },
   input: {
     height: 50,
@@ -481,9 +480,9 @@ const styles = StyleSheet.create({
   },
   iconStyle: {
     color: '#fff',
-    fontSize: 17,
-    marginTop: 20
-  },
+    fontSize: 19,
+    marginTop: 18
+  }
 });
 
 const pickerStyles = StyleSheet.create({

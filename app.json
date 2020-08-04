@@ -9,7 +9,7 @@
       "android",
       "web"
     ],
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "android": {
@@ -44,7 +44,13 @@
         "backgroundColor": "#0B7EA0"
       },
       "supportsTablet": false,
-      "bundleIdentifier": "com.btt.tagreporter.client"
+      "bundleIdentifier": "com.btt.tagreporter.client",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "TagReporter requires your location so that we can determine the location of your catch",
+        "NSLocationAlwaysUsageDescription": "TagReporter requires your location so that we can determine the location of your catch",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "agReporter requires your location so that we can determine the location of your catch",
+        "NSLocationUsageDescription": "TagReporter requires your location so that we can determine the location of your catch"
+      }
     },
     "updates": {
       "fallbackToCacheTimeout": 300000

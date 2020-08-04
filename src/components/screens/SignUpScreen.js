@@ -10,6 +10,7 @@ import {
   Alert,
   Modal,
   FlatList} from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
 import { Container, Item, Input, Toast, Spinner } from 'native-base';
 import Auth from '@aws-amplify/auth';
@@ -73,7 +74,7 @@ export default class SignUpScreen extends React.Component {
       email,
       password,
       phoneNumber,
-      membershipCode
+     // membershipCode
     } = this.state;
 
     let allRequiredFields =
@@ -81,10 +82,11 @@ export default class SignUpScreen extends React.Component {
       this.isEmpty(lastName) ||
       this.isEmpty(email) ||
       this.isEmpty(password) ||
-      this.isEmpty(phoneNumber) ||
-      membershipCode !== 'btt#1'
-        ? true
-        : false;
+      this.isEmpty(phoneNumber) ;
+      // ||
+      // membershipCode !== 'btt#1'
+      //   ? true
+      //   : false;
 
     // console.log('this.isEmpty(firstName)' + this.isEmpty(firstName));
     // console.log('this.isEmpty(lastName)' + this.isEmpty(lastName));
@@ -109,8 +111,6 @@ export default class SignUpScreen extends React.Component {
 
   hideModal = () => {
     this.setState({ modalVisible: false });
-    // refocus on phone Input after selecting country and/or closing Modal
-
   };
 
   getCountry = async country => {
@@ -193,10 +193,8 @@ export default class SignUpScreen extends React.Component {
       })
       .catch(err => {
         if (!err.message) {
-          console.log('Error when entering confirmation code: ', err);
           Alert.alert('Error when entering confirmation code: ', err);
         } else {
-          console.log('Error when entering confirmation code: ', err.message);
           Alert.alert('Error when entering confirmation code: ', err.message);
         }
       });
@@ -237,6 +235,7 @@ export default class SignUpScreen extends React.Component {
             autoCapitalize="none"
             autoCorrect={false}
             secureTextEntry={false}
+            value={this.state.authCode}
             onChangeText={value => this.onChangeText('authCode', value)}
           />
         </Item>

@@ -13,6 +13,9 @@ type TagReports {
   phone: String!
   pictureUrl: String
   owner: String
+  recapture: String
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
 }
 
 enum ModelSortDirection {
@@ -113,9 +116,23 @@ input ModelTagReportsFilterInput {
   phone: ModelStringInput
   pictureUrl: ModelStringInput
   owner: ModelStringInput
+  recapture: ModelStringInput
   and: [ModelTagReportsFilterInput]
   or: [ModelTagReportsFilterInput]
   not: ModelTagReportsFilterInput
+}
+
+enum ModelAttributeTypes {
+  binary
+  binarySet
+  bool
+  list
+  map
+  number
+  numberSet
+  string
+  stringSet
+  _null
 }
 
 type Query {
@@ -138,6 +155,7 @@ input CreateTagReportsInput {
   phone: String!
   pictureUrl: String
   owner: String
+  recapture: String
 }
 
 input UpdateTagReportsInput {
@@ -155,6 +173,7 @@ input UpdateTagReportsInput {
   phone: String
   pictureUrl: String
   owner: String
+  recapture: String
 }
 
 input DeleteTagReportsInput {
@@ -180,26 +199,14 @@ input ModelTagReportsConditionInput {
   email: ModelStringInput
   phone: ModelStringInput
   pictureUrl: ModelStringInput
+  recapture: ModelStringInput
   and: [ModelTagReportsConditionInput]
   or: [ModelTagReportsConditionInput]
   not: ModelTagReportsConditionInput
 }
 
-enum ModelAttributeTypes {
-  binary
-  binarySet
-  bool
-  list
-  map
-  number
-  numberSet
-  string
-  stringSet
-  _null
-}
-
 type Subscription {
-  onCreateTagReports(owner: String!): TagReports @aws_subscribe(mutations: ["createTagReports"])
-  onUpdateTagReports(owner: String!): TagReports @aws_subscribe(mutations: ["updateTagReports"])
-  onDeleteTagReports(owner: String!): TagReports @aws_subscribe(mutations: ["deleteTagReports"])
+  onCreateTagReports: TagReports @aws_subscribe(mutations: ["createTagReports"])
+  onUpdateTagReports: TagReports @aws_subscribe(mutations: ["updateTagReports"])
+  onDeleteTagReports: TagReports @aws_subscribe(mutations: ["deleteTagReports"])
 }

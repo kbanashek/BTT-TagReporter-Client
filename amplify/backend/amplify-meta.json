@@ -1,67 +1,67 @@
 {
-    "providers": {
-        "awscloudformation": {
-            "AuthRoleName": "amplify-reactnativeauth-dev-95043-authRole",
-            "UnauthRoleArn": "arn:aws:iam::269434377690:role/amplify-reactnativeauth-dev-95043-unauthRole",
-            "AuthRoleArn": "arn:aws:iam::269434377690:role/amplify-reactnativeauth-dev-95043-authRole",
-            "Region": "us-east-1",
-            "DeploymentBucketName": "amplify-reactnativeauth-dev-95043-deployment",
-            "UnauthRoleName": "amplify-reactnativeauth-dev-95043-unauthRole",
-            "StackName": "amplify-reactnativeauth-dev-95043",
-            "StackId": "arn:aws:cloudformation:us-east-1:269434377690:stack/amplify-reactnativeauth-dev-95043/60cbd910-53f0-11ea-8d89-1277bf9feb05",
-            "AmplifyAppId": "dd4jpojx3w1b8"
-        },
-        "categories": {
-            "auth": {
-                "reactnativeauth55693b4f": {}
-            }
-        }
-    },
-    "auth": {
-        "reactnativeauth55693b4f": {
-            "service": "Cognito",
-            "providerPlugin": "awscloudformation",
-            "dependsOn": [],
-            "customAuth": false,
-            "output": {
-                "AppClientSecret": "1stqdrlo1c60t0o9d8nhe8g2kag2otfol1f13os5c15eu99299ou",
-                "UserPoolId": "us-east-1_jkvmgVJEf",
-                "AppClientIDWeb": "4kq7b2m03f68aqa7jqr4c34toi",
-                "AppClientID": "3pt8amvljmij3fpprr13pj678b",
-                "IdentityPoolId": "us-east-1:43fefa92-d15e-4f9b-a42a-7ccbcfbbf801",
-                "IdentityPoolName": "reactnativeauth55693b4f_identitypool_55693b4f__dev",
-                "UserPoolName": "reactnativeauth55693b4f_userpool_55693b4f"
-            },
-            "lastPushTimeStamp": "2020-03-01T15:06:39.319Z",
-            "providerMetadata": {
-                "s3TemplateURL": "https://s3.amazonaws.com/amplify-reactnativeauth-dev-95043-deployment/amplify-cfn-templates/auth/reactnativeauth55693b4f-cloudformation-template.yml",
-                "logicalId": "authreactnativeauth55693b4f"
-            }
-        }
-    },
-    "api": {
-        "BttTagReporterClient": {
-            "service": "AppSync",
-            "providerPlugin": "awscloudformation",
-            "output": {
-                "authConfig": {
-                    "additionalAuthenticationProviders": [],
-                    "defaultAuthentication": {
-                        "authenticationType": "AMAZON_COGNITO_USER_POOLS",
-                        "userPoolConfig": {
-                            "userPoolId": "authreactnativeauth55693b4f"
-                        }
-                    }
-                },
-                "GraphQLAPIIdOutput": "rvoqmxv6xjaq3lti2c3hluqudq",
-                "GraphQLAPIEndpointOutput": "https://umkwemz75rfqvbcokzz5muehiq.appsync-api.us-east-1.amazonaws.com/graphql"
-            },
-            "providerMetadata": {
-                "s3TemplateURL": "https://s3.amazonaws.com/amplify-reactnativeauth-dev-95043-deployment/amplify-cfn-templates/api/cloudformation-template.json",
-                "logicalId": "apiBttTagReporterClient"
-            },
-            "lastPushTimeStamp": "2020-03-01T15:06:39.321Z",
-            "lastPushDirHash": "Fbx74kbnAr5ZyKsFuwPpGRo+R8Y="
-        }
-    }
+	"providers": {
+		"awscloudformation": {
+			"AuthRoleName": "amplify-reactnativeauth-dev-95043-authRole",
+			"UnauthRoleArn": "arn:aws:iam::269434377690:role/amplify-reactnativeauth-dev-95043-unauthRole",
+			"AuthRoleArn": "arn:aws:iam::269434377690:role/amplify-reactnativeauth-dev-95043-authRole",
+			"Region": "us-east-1",
+			"DeploymentBucketName": "amplify-reactnativeauth-dev-95043-deployment",
+			"UnauthRoleName": "amplify-reactnativeauth-dev-95043-unauthRole",
+			"StackName": "amplify-reactnativeauth-dev-95043",
+			"StackId": "arn:aws:cloudformation:us-east-1:269434377690:stack/amplify-reactnativeauth-dev-95043/60cbd910-53f0-11ea-8d89-1277bf9feb05",
+			"AmplifyAppId": "dd4jpojx3w1b8"
+		},
+		"categories": {
+			"auth": {
+				"reactnativeauth55693b4f": {}
+			}
+		}
+	},
+	"auth": {
+		"reactnativeauth55693b4f": {
+			"service": "Cognito",
+			"providerPlugin": "awscloudformation",
+			"dependsOn": [],
+			"customAuth": false,
+			"output": {
+				"AppClientSecret": "1stqdrlo1c60t0o9d8nhe8g2kag2otfol1f13os5c15eu99299ou",
+				"UserPoolId": "us-east-1_jkvmgVJEf",
+				"AppClientIDWeb": "4kq7b2m03f68aqa7jqr4c34toi",
+				"AppClientID": "3pt8amvljmij3fpprr13pj678b",
+				"IdentityPoolId": "us-east-1:43fefa92-d15e-4f9b-a42a-7ccbcfbbf801",
+				"IdentityPoolName": "reactnativeauth55693b4f_identitypool_55693b4f__dev",
+				"UserPoolName": "reactnativeauth55693b4f_userpool_55693b4f"
+			},
+			"lastPushTimeStamp": "2020-08-04T00:38:49.317Z",
+			"providerMetadata": {
+				"s3TemplateURL": "https://s3.amazonaws.com/amplify-reactnativeauth-dev-95043-deployment/amplify-cfn-templates/auth/reactnativeauth55693b4f-cloudformation-template.yml",
+				"logicalId": "authreactnativeauth55693b4f"
+			}
+		}
+	},
+	"api": {
+		"BttTagReporterClient": {
+			"service": "AppSync",
+			"providerPlugin": "awscloudformation",
+			"output": {
+				"authConfig": {
+					"additionalAuthenticationProviders": [],
+					"defaultAuthentication": {
+						"authenticationType": "AMAZON_COGNITO_USER_POOLS",
+						"userPoolConfig": {
+							"userPoolId": "authreactnativeauth55693b4f"
+						}
+					}
+				},
+				"GraphQLAPIIdOutput": "rvoqmxv6xjaq3lti2c3hluqudq",
+				"GraphQLAPIEndpointOutput": "https://umkwemz75rfqvbcokzz5muehiq.appsync-api.us-east-1.amazonaws.com/graphql"
+			},
+			"providerMetadata": {
+				"s3TemplateURL": "https://s3.amazonaws.com/amplify-reactnativeauth-dev-95043-deployment/amplify-cfn-templates/api/cloudformation-template.json",
+				"logicalId": "apiBttTagReporterClient"
+			},
+			"lastPushTimeStamp": "2020-08-04T00:38:49.777Z",
+			"lastPushDirHash": "qXN3zm/G3fUxm9s57zgP7VfBu4I="
+		}
+	}
 }
