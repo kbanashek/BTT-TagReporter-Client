@@ -26,6 +26,7 @@ import { connectionState } from '../app/actions';
 import { IsConnected } from '../../components/network/IsConnected';
 import * as mutations from '../../graphql/mutations';
 import species from '../data/species';
+import catchType from '../data/catchType';
 import locations from '../data/locations';
 import COLORS from '../../constants/constants';
 
@@ -53,7 +54,8 @@ class HomeScreen extends React.Component {
     tagLocationCode: '',
     email: '',
     phone: '',
-    isDisabled: true
+    isDisabled: true,
+    recapture: 'false'
   };
 
   static navigationOptions = () => ({
@@ -122,7 +124,8 @@ class HomeScreen extends React.Component {
       location,
       tagArea,
       user,
-      tagLocationCode
+      tagLocationCode,
+      recapture
     } = this.state;
 
     const { phone_number, email } = user;
@@ -145,7 +148,8 @@ class HomeScreen extends React.Component {
       location,
       fishLength,
       user,
-      phone_number
+      phone_number,
+      recapture
     );
 
     try {
@@ -188,20 +192,21 @@ class HomeScreen extends React.Component {
     location,
     fishLength,
     user,
-    phone_number
+    phone_number,
+    recapture
   ) => {
     return {
       tagArea,
       email,
       fishType,
       comment,
+      recapture,
       tagNumber: tagLocationCode + '-' + tagNumber,
       tagDate: moment().format(),
       tagLocation: location,
       fishLength: fishLength + ' ' + user['custom:preferredMeasure'],
       guideName: user['custom:firstName'] + ' ' + user['custom:lastName'],
-      phone: phone_number,
-      recapture : 'false'
+      phone: phone_number
     };
   };
 
@@ -250,7 +255,8 @@ class HomeScreen extends React.Component {
       tagNumber: '',
       tagArea: null,
       comment: '',
-      tagDate: null
+      tagDate: null, 
+      recapture: null
     });
   }
   renderLocationTag = () => {
@@ -273,6 +279,8 @@ class HomeScreen extends React.Component {
 
   render() {
     let message = 'Locating.....';
+  
+    let fishLengthPlaceHolder = this.getFishLengthPlaceHolderText();
 
     if (this.state.errorMessage) {
     } else if (this.state.location) {
@@ -304,11 +312,13 @@ class HomeScreen extends React.Component {
             labelStyle={{
               fontSize: 17,
               color: 'white',
-              padding: 10,
-              paddingBottom: 30
+              padding: 10
             }}
             onPress={value => {
               this.setState({ fishType: value });
+            }}
+            style={{
+              padding: 5
             }}
           />
           <View style={styles.dropDownInput}>{this.renderLocationTag()}</View>
@@ -327,19 +337,35 @@ class HomeScreen extends React.Component {
               placeholderTextColor={COLORS.MEDIUM_GREY}
               onChangeText={v => this.onChange('fishLength', v)}
               value={this.state.fishLength}
-              placeholder="Fish Length"
+              placeholder={fishLengthPlaceHolder}
               keyboardType={'phone-pad'}
             />
           </Item>
           <Item style={styles.itemStyle}>
             <Input
               placeholderTextColor={COLORS.MEDIUM_GREY}
-              style={styles.textInput}
+              style={styles.input}
               onChangeText={v => this.onChange('comment', v)}
               value={this.state.comment}
               placeholder="Comment"
             />
           </Item>
+          <RadioForm
+            radio_props={catchType}
+            initial={this.state.recapture}
+            formHorizontal={true}
+            labelHorizontal={true}
+            buttonColor={'#2196f3'}
+            animation={true}
+            buttonSize={30}
+            buttonOuterSize={35}
+            labelStyle={{
+              color: 'white'
+            }}
+            onPress={value => {
+              this.setState({ recapture: value });
+            }}
+          />
           <View style={styles.loginButtonSection}>
             <TouchableOpacity
               onPress={() => this.createTagReport()}
@@ -382,6 +408,18 @@ class HomeScreen extends React.Component {
       <IsConnected isConnected={this.state.isConnected} />
     ) : null;
   };
+
+  getFishLengthPlaceHolderText() {
+    const { user } = this.state;
+
+    let fishLengthPlaceHolder = 'fish length';
+    if (user) {
+      const preferredMeasure = user['custom:preferredMeasure'];
+      fishLengthPlaceHolder = `Fish Length (${preferredMeasure})`;
+      console.log('user' + fishLengthPlaceHolder);
+    }
+    return fishLengthPlaceHolder;
+  }
 }
 
 function mapDispatchToProps(dispatch) {

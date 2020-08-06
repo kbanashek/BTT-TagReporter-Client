@@ -28,6 +28,7 @@ import { DrawerComponent } from './DrawerComponent';
 
 Amplify.configure(awsmobile);
 
+
 const HEADER_HEIGHT = Platform.OS === 'ios' ? 60 : 50;
 
 const AppStackNavigator = createStackNavigator({

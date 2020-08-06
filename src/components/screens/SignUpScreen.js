@@ -19,6 +19,7 @@ import RadioForm from 'react-native-simple-radio-button';
 import countriesData from '../data/countriesData';
 import COLORS from '../../constants/constants';
 
+
 const defaultFlag = countriesData.filter(obj => obj.name === 'United States')[0]
   .flag;
 const defaultCode = countriesData.filter(obj => obj.name === 'United States')[0]
@@ -74,7 +75,7 @@ export default class SignUpScreen extends React.Component {
       email,
       password,
       phoneNumber,
-     // membershipCode
+      membershipCode
     } = this.state;
 
     let allRequiredFields =
@@ -82,11 +83,11 @@ export default class SignUpScreen extends React.Component {
       this.isEmpty(lastName) ||
       this.isEmpty(email) ||
       this.isEmpty(password) ||
-      this.isEmpty(phoneNumber) ;
-      // ||
-      // membershipCode !== 'btt#1'
-      //   ? true
-      //   : false;
+      this.isEmpty(phoneNumber) 
+      ||
+      membershipCode !== 'btt#1'
+        ? true
+        : false;
 
     // console.log('this.isEmpty(firstName)' + this.isEmpty(firstName));
     // console.log('this.isEmpty(lastName)' + this.isEmpty(lastName));
@@ -237,6 +238,7 @@ export default class SignUpScreen extends React.Component {
             secureTextEntry={false}
             value={this.state.authCode}
             onChangeText={value => this.onChangeText('authCode', value)}
+            selectionColor="black"
           />
         </Item>
         <TouchableOpacity
@@ -285,7 +287,7 @@ export default class SignUpScreen extends React.Component {
             autoCapitalize="words"
             autoCorrect={false}
             onChangeText={value => this.onChangeText('firstName', value)}
-            selectionColor="white"
+            selectionColor="black"
           />
           <Input
             style={[styles.input, { marginLeft: 10 }]}
@@ -297,7 +299,7 @@ export default class SignUpScreen extends React.Component {
             autoCorrect={false}
             ref="SecondInput"
             onChangeText={value => this.onChangeText('lastName', value)}
-            selectionColor="white"
+            selectionColor="black"
           />
         </Item>
         {/* email section */}
@@ -313,6 +315,7 @@ export default class SignUpScreen extends React.Component {
             autoCorrect={false}
             secureTextEntry={false}
             onChangeText={value => this.onChangeText('email', value)}
+            selectionColor="black"
           />
         </Item>
         {/*  password section  */}
@@ -328,6 +331,7 @@ export default class SignUpScreen extends React.Component {
             secureTextEntry={true}
             ref="ThirdInput"
             onChangeText={value => this.onChangeText('password', value)}
+            selectionColor="black"
           />
         </Item>
         {/*  membership code section  */}
@@ -344,6 +348,7 @@ export default class SignUpScreen extends React.Component {
             ref="ThirdInput"
             value={this.state.membershipCode}
             onChangeText={value => this.onChangeText('membershipCode', value)}
+            selectionColor="black"
           />
         </Item>
         {/* phone section  */}
@@ -370,6 +375,7 @@ export default class SignUpScreen extends React.Component {
             secureTextEntry={false}
             ref="FifthInput"
             value={this.state.phoneNumber}
+            selectionColor="black"
             onChangeText={val => {
               if (this.state.phoneNumber === '') {
                 this.onChangeText('phoneNumber', defaultCode + val);
@@ -511,7 +517,6 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 50,
-
     fontSize: 20,
     padding: 5,
     borderRadius: 4,
