@@ -60,7 +60,7 @@ export default class TagLogScreen extends React.Component {
 
       tagReports.data.listTagReportss.items.sort(sortByTagDate);
 
-      console.log(tagReports.data.listTagReportss.items);
+      // console.log(tagReports.data.listTagReportss.items);
 
       this.setState({
         tagReports: tagReports.data.listTagReportss.items

@@ -4,16 +4,15 @@ import {
   View,
   Text,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  ScrollView,
   Platform
 } from 'react-native';
-import { SafeAreaView } from 'react-navigation';
+
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Item, Input, Toast } from 'native-base';
 import { connect } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import NetInfo from '@react-native-community/netinfo';
+
 import RNPickerSelect from 'react-native-picker-select';
 import { API, graphqlOperation, Auth } from 'aws-amplify';
 import Constants from 'expo-constants';
@@ -24,6 +23,8 @@ import * as Font from 'expo-font';
 import RadioForm from 'react-native-simple-radio-button';
 import { connectionState } from '../app/actions';
 import { IsConnected } from '../../components/network/IsConnected';
+import OfflineNotice from '../../components/screens/OfflineNotice';
+
 import * as mutations from '../../graphql/mutations';
 import species from '../data/species';
 import catchType from '../data/catchType';
@@ -55,14 +56,18 @@ class HomeScreen extends React.Component {
     email: '',
     phone: '',
     isDisabled: true,
-    recapture: 'false'
+    recapture: 'false',
+    showToast: false
   };
 
   static navigationOptions = () => ({
     animationEnabled: true
   });
 
-  async componentDidMount() {
+   async componentDidMount() {
+
+    NetInfo.addEventListener(this.handleConnectivityChange);
+
     await Font.loadAsync({
       Roboto: require('native-base/Fonts/Roboto.ttf'),
       Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf'),
@@ -74,12 +79,27 @@ class HomeScreen extends React.Component {
     await this.getCurrentLocation();
   }
 
-  handleConnectionChange = isConnected => {
-    this.setState({ isConnected });
-    console.log(`Connection type: ${isConnected.type}`);
-    console.log(`this.state.status: ${this.state.status}`);
-  };
+  componentWillUnmount() {
+    NetInfo.removeEventListener(this.handleConnectivityChange);
+  }
 
+  handleConnectivityChange = state => {
+    this.setState({isConnected:state.isConnected});
+
+    if (state.isConnected) {
+      console.log('Online');
+    } else {
+      console.log('Offline');
+      Toast.show({
+        text: 'Your device currently does not have connectivity',
+        buttonText: 'Okay',
+        duration: 13000,
+        position: 'bottom',
+        type: 'success'
+      });
+    }
+  };
+ 
   getLocation = async () => {
     let { status } = await Permissions.askAsync(Permissions.LOCATION);
 
@@ -153,11 +173,6 @@ class HomeScreen extends React.Component {
     );
 
     try {
-      const result = await API.graphql(
-        graphqlOperation(mutations.createTagReports, {
-          input: tagReport
-        })
-      );
 
       this.clearTagReportState();
       this.getLocation();
@@ -167,7 +182,7 @@ class HomeScreen extends React.Component {
         errorMessage: 'Unable to submit tag report'
       });
       alert(err.message);
-      Toast.hide();
+     
       Toast.show({
         text: 'Unable to submit tag report',
         buttonText: 'Okay',
@@ -255,7 +270,7 @@ class HomeScreen extends React.Component {
       tagNumber: '',
       tagArea: null,
       comment: '',
-      tagDate: null, 
+      tagDate: null,
       recapture: null
     });
   }
@@ -279,7 +294,7 @@ class HomeScreen extends React.Component {
 
   render() {
     let message = 'Locating.....';
-  
+
     let fishLengthPlaceHolder = this.getFishLengthPlaceHolderText();
 
     if (this.state.errorMessage) {
@@ -405,18 +420,17 @@ class HomeScreen extends React.Component {
 
   getConnectionInfo = () => {
     return !this.state.isConnected ? (
-      <IsConnected isConnected={this.state.isConnected} />
+      <OfflineNotice  />
     ) : null;
   };
 
   getFishLengthPlaceHolderText() {
     const { user } = this.state;
 
-    let fishLengthPlaceHolder = 'fish length';
+    let fishLengthPlaceHolder = 'Fish Length';
     if (user) {
       const preferredMeasure = user['custom:preferredMeasure'];
       fishLengthPlaceHolder = `Fish Length (${preferredMeasure})`;
-      console.log('user' + fishLengthPlaceHolder);
     }
     return fishLengthPlaceHolder;
   }

@@ -1,123 +1,101 @@
-import React, { useState } from "react";
+'use-strict';
+import * as React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
+  Text,
+  TouchableOpacity,
   Image,
-  Alert,
-  TouchableOpacity
-} from "react-native";
-import PhotoComments from "./PhotoComments";
-import moment from "moment";
-import * as MediaLibrary from "expo-media-library";
-import * as FileSystem from "expo-file-system";
-import * as Permissions from "expo-permissions";
-import { Button } from "react-native-elements";
-import ZoomableImage from "./ZoomableImage";
+  ScrollView
+} from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
+import * as Permissions from 'expo-permissions';
 
-function downloadFile(uri) {
-  let filename = uri.split("/");
-  filename = filename[filename.length - 1];
-  let fileUri = FileSystem.documentDirectory + filename;
-  FileSystem.downloadAsync(uri, fileUri)
-    .then(({ uri }) => {
-      saveFile(uri);
-    })
-    .catch(error => {
-      Alert.alert("Error", "Couldn't download photo");
-      console.error(error);
-    });
-}
+const ImagePickerExample = props => {
+  const [gallery, setGallery] = React.useState([]);
+  const [location, setLocation] = React.useState({
+    location: { latitude: null, longitude: null }
+  });
 
-async function saveFile(fileUri) {
-  const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
-  if (status === "granted") {
-    const asset = await MediaLibrary.createAssetAsync(fileUri);
-    await MediaLibrary.createAlbumAsync("Download", asset, false);
-    Alert.alert("Success", "Image was successfully downloaded!");
+  React.useEffect(() => {
+    let status = permissions();
+    console.log(status);
+    getGallery();
+  }, []);
+
+  async function permissions() {
+    // permissions returns only for location permissions on iOS and under certain conditions, see Permissions.LOCATION
+    const { status, permissions } = await Permissions.askAsync(
+      Permissions.CAMERA_ROLL
+    );
+
+    // const { status } = await Permissions.askAsync(Permissions.CAMERA);
+    //   if (status === 'granted') {
+    //   }
   }
-}
 
-const PhotoRecord = ({ data }) => {
-  const [show, setShow] = useState(false);
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      exif: true
+    });
+    if (!result.cancelled) {
+      let location = {
+        latitude: result.exif.GPSLatitude,
+        longitude: result.exif.GPSLongitude
+      };
+      setLocation(location);
+    }
+  };
+
+  const getGallery = async () => {
+    const assets = await MediaLibrary.getAssetsAsync({
+      first: 50,
+      sortBy: MediaLibrary.SortBy.creationTime
+    });
+    setGallery(assets.assets);
+  };
+
+  const pickGalleryImage = async img => {
+    const imageData = await MediaLibrary.getAssetInfoAsync(img);
+    if (imageData.location) {
+      let location = {
+        latitude: imageData.location.latitude,
+        longitude: imageData.location.longitude
+      };
+      setLocation(location);
+    } else {
+      setLocation({ location: { latitude: null, longitude: null } });
+      alert('No location data on image');
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      <ZoomableImage
-        show={show}
-        setShow={setShow}
-        imageSource={data.links.image}
-      />
-      <View style={styles.infoContainer}>
-        <Text style={styles.usernameLabel}>@{data.username}</Text>
-        <Text style={styles.addedAtLabel}>
-          {moment(new Date(data.addedAt)).format("YYYY/MM/DD HH:mm")}
-        </Text>
-      </View>
-      <TouchableOpacity
-        activeOpacity={1}
-        style={styles.imageContainer}
-        onLongPress={() => setShow(true)}
-      >
-        <Image source={{ uri: data.links.thumb }} style={styles.image} />
+    <View style={s.container}>
+      <TouchableOpacity onPress={() => pickImage()}>
+        <Text style={s.btn}>Click here to pick image</Text>
       </TouchableOpacity>
-      <PhotoComments comments={data.photoComments} />
-      <View style={styles.btnContainer}>
-        <Button
-          buttonStyle={{
-            backgroundColor: "white",
-            borderWidth: 1
-          }}
-          titleStyle={{ color: "dodgerblue" }}
-          containerStyle={{ backgroundColor: "yellow" }}
-          title="Add Comment"
-        />
-        <Button
-          onPress={() => downloadFile(data.links.image)}
-          style={styles.btn}
-          title="Download"
-        />
-      </View>
+      <View style={{ marginBottom: 20 }} />
+      <Text>Latitude: {location.latitude}</Text>
+      <Text>Longitude: {location.longitude}</Text>
+
+      <ScrollView style={s.gallery}>
+        {gallery.map((img, i) => {
+          return (
+            <TouchableOpacity key={i} onPress={() => pickGalleryImage(img)}>
+              <Image source={{ uri: img.uri }} style={s.image} />
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    display: "flex",
-    flexDirection: "column"
-  },
-  infoContainer: {
-    borderBottomWidth: 1,
-    borderColor: "gainsboro",
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 15
-  },
-  usernameLabel: {
-    fontSize: 18,
-    fontWeight: "bold"
-  },
-  addedAtLabel: {
-    paddingTop: 10,
-    color: "#404040"
-  },
-  imageContainer: {
-    width: "100%",
-    height: 380
-  },
-  image: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover"
-  },
-  btnContainer: {
-    flex: 1,
-    flexDirection: "row",
-    marginBottom: 100,
-    justifyContent: "space-between"
-  }
-});
+export default ImagePickerExample;
 
-export default PhotoRecord;
+const s = StyleSheet.create({
+  container: { flex: 1, marginTop: 50 },
+  image: { width: 200, height: 200 },
+  btn: { backgroundColor: '#2ecc71', width: 200, padding: 10 }
+});

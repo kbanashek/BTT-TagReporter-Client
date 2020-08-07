@@ -11,6 +11,8 @@ import reducer from './src/components/app/reducer';
 import thunk from 'redux-thunk';
 import * as Font from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
+import Amplify from '@aws-amplify/core';
+import awsmobile from './aws-exports';
 
 import AuthLoadingScreen from './src/components/screens/AuthLoadingScreen';
 import WelcomeScreen from './src/components/screens/WelcomeScreen';
@@ -20,9 +22,9 @@ import ForgetPasswordScreen from './src/components/screens/ForgetPasswordScreen'
 import HomeScreen from './src/components/screens/HomeScreen';
 import SettingsScreen from './src/components/screens/SettingsScreen';
 import TagLogScreen from './src/components/screens/TagLogScreen';
+import ImagePickerExample from './src/components/screens/PhotoRecord';
 import { useFonts } from 'expo-font';
-import Amplify from '@aws-amplify/core';
-import awsmobile from './aws-exports';
+
 import { AppTabNavigator } from './appTabNavigatorConfig';
 import { DrawerComponent } from './DrawerComponent';
 
@@ -50,10 +52,11 @@ const AppStackNavigator = createStackNavigator({
 const AppDrawerNavigator = createDrawerNavigator(
   {
     Menu: AppStackNavigator,
-    ['Report Tag']: HomeScreen,
+    ['Report Tags']: HomeScreen,
     ['Tag Log']: TagLogScreen,
     Settings: SettingsScreen,
-    ['Sign Out']: SettingsScreen
+    ['Sign Out']: SettingsScreen,
+    ImagePickerExample: ImagePickerExample,
   },
   {
     contentComponent: DrawerComponent
@@ -122,6 +125,7 @@ export default class App extends React.Component {
     return (
       <Provider store={store}>
         <Root>
+          
           <AppContainer />
         </Root>
       </Provider>
