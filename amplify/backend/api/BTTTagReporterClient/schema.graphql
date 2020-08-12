@@ -1,14 +1,6 @@
 type TagReports
   @model
-  @auth(
-    rules: [
-      {
-        allow: owner
-        ownerField: "owner"
-        operations: [create, update, delete]
-      }
-    ]
-  ) {
+ {
   id: ID!
   tagNumber: String!
   fishType: String!

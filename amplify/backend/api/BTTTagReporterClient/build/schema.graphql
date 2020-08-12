@@ -199,6 +199,7 @@ input ModelTagReportsConditionInput {
   email: ModelStringInput
   phone: ModelStringInput
   pictureUrl: ModelStringInput
+  owner: ModelStringInput
   recapture: ModelStringInput
   and: [ModelTagReportsConditionInput]
   or: [ModelTagReportsConditionInput]

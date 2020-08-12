@@ -32,7 +32,7 @@
 				"IdentityPoolName": "reactnativeauth55693b4f_identitypool_55693b4f__dev",
 				"UserPoolName": "reactnativeauth55693b4f_userpool_55693b4f"
 			},
-			"lastPushTimeStamp": "2020-08-04T00:38:49.317Z",
+			"lastPushTimeStamp": "2020-08-12T13:11:49.282Z",
 			"providerMetadata": {
 				"s3TemplateURL": "https://s3.amazonaws.com/amplify-reactnativeauth-dev-95043-deployment/amplify-cfn-templates/auth/reactnativeauth55693b4f-cloudformation-template.yml",
 				"logicalId": "authreactnativeauth55693b4f"
@@ -60,8 +60,8 @@
 				"s3TemplateURL": "https://s3.amazonaws.com/amplify-reactnativeauth-dev-95043-deployment/amplify-cfn-templates/api/cloudformation-template.json",
 				"logicalId": "apiBttTagReporterClient"
 			},
-			"lastPushTimeStamp": "2020-08-04T00:38:49.777Z",
-			"lastPushDirHash": "qXN3zm/G3fUxm9s57zgP7VfBu4I="
+			"lastPushTimeStamp": "2020-08-12T13:11:49.641Z",
+			"lastPushDirHash": "jrjJh7dTXoky2FxGO2KSi/oG5sc="
 		}
 	}
 }
