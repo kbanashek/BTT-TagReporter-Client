@@ -14,6 +14,9 @@ type TagReports {
   pictureUrl: String
   owner: String
   recapture: String
+  _version: Int!
+  _deleted: Boolean
+  _lastChangedAt: AWSTimestamp!
   createdAt: AWSDateTime!
   updatedAt: AWSDateTime!
 }
@@ -26,6 +29,7 @@ enum ModelSortDirection {
 type ModelTagReportsConnection {
   items: [TagReports]
   nextToken: String
+  startedAt: AWSTimestamp
 }
 
 input ModelStringInput {
@@ -136,6 +140,7 @@ enum ModelAttributeTypes {
 }
 
 type Query {
+  syncTagReports(filter: ModelTagReportsFilterInput, limit: Int, nextToken: String, lastSync: AWSTimestamp): ModelTagReportsConnection
   getTagReports(id: ID!): TagReports
   listTagReportss(filter: ModelTagReportsFilterInput, limit: Int, nextToken: String): ModelTagReportsConnection
 }
@@ -156,6 +161,7 @@ input CreateTagReportsInput {
   pictureUrl: String
   owner: String
   recapture: String
+  _version: Int
 }
 
 input UpdateTagReportsInput {
@@ -174,10 +180,12 @@ input UpdateTagReportsInput {
   pictureUrl: String
   owner: String
   recapture: String
+  _version: Int
 }
 
 input DeleteTagReportsInput {
   id: ID
+  _version: Int
 }
 
 type Mutation {

@@ -22,6 +22,9 @@ export const createTagReports = /* GraphQL */ `
       pictureUrl
       owner
       recapture
+      _version
+      _deleted
+      _lastChangedAt
       createdAt
       updatedAt
     }
@@ -48,6 +51,9 @@ export const updateTagReports = /* GraphQL */ `
       pictureUrl
       owner
       recapture
+      _version
+      _deleted
+      _lastChangedAt
       createdAt
       updatedAt
     }
@@ -74,6 +80,9 @@ export const deleteTagReports = /* GraphQL */ `
       pictureUrl
       owner
       recapture
+      _version
+      _deleted
+      _lastChangedAt
       createdAt
       updatedAt
     }

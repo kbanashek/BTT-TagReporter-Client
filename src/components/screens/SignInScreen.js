@@ -32,7 +32,7 @@ export default class App extends React.Component {
     screenWidth: 0,
     containerHeight: 0,
     showImage: true,
-    username: '',
+    username: 'kylebanashek@yahoo.com',
     password: '',
     fadeIn: new Animated.Value(0),
     fadeOut: new Animated.Value(0),
@@ -66,7 +66,6 @@ export default class App extends React.Component {
   }
 
   checkForUserName = () => {
-    console.log('*****SignInProps', this.props.navigation.state.params);
     if (
       this.props.navigation.state.params &&
       this.props.navigation.state.params.email

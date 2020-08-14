@@ -132,7 +132,7 @@
 						]
 					},
 					"S3DeploymentBucket": "amplify-reactnativeauth-dev-95043-deployment",
-					"S3DeploymentRootKey": "amplify-appsync-files/2d40e41715051a9f09c0effc6d67246d2a61a194",
+					"S3DeploymentRootKey": "amplify-appsync-files/b86945ac1372c63fba26cdd6678aa7f629e13209",
 					"env": "dev"
 				}
 			}

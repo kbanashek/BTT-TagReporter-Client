@@ -40,7 +40,8 @@ export class DrawerComponent extends React.Component {
   render() {
     styles = StyleSheet.create({
       container: {
-        paddingTop: 40,
+        paddingTop: 240,
+        top: 100,
         flex: 1,
         backgroundColor: '#efefef'
       },

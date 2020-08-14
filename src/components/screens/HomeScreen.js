@@ -9,27 +9,25 @@ import {
 
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Item, Input, Toast } from 'native-base';
-import { connect } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
-import NetInfo from '@react-native-community/netinfo';
 
 import RNPickerSelect from 'react-native-picker-select';
-import { API, graphqlOperation, Auth } from 'aws-amplify';
+import { Auth } from 'aws-amplify';
 import Constants from 'expo-constants';
 import * as Location from 'expo-location';
 import * as Permissions from 'expo-permissions';
 import moment from 'moment';
 import * as Font from 'expo-font';
 import RadioForm from 'react-native-simple-radio-button';
-import { connectionState } from '../app/actions';
-import { IsConnected } from '../../components/network/IsConnected';
 import OfflineNotice from '../../components/screens/OfflineNotice';
 
-import * as mutations from '../../graphql/mutations';
 import species from '../data/species';
 import catchType from '../data/catchType';
 import locations from '../data/locations';
 import COLORS from '../../constants/constants';
+
+import { DataStore } from '@aws-amplify/datastore';
+import { TagReports } from '../../models';
 
 class HomeScreen extends React.Component {
   constructor(props) {
@@ -64,9 +62,16 @@ class HomeScreen extends React.Component {
     animationEnabled: true
   });
 
-   async componentDidMount() {
+  async componentDidMount() {
+    // NetInfo.addEventListener(this.handleConnectivityChange);
 
-    NetInfo.addEventListener(this.handleConnectivityChange);
+    const { navigation } = this.props;
+
+     this.navFocusListener = await navigation.addListener('didFocus', async () => {
+      // do some API calls here
+      console.log('focused$$$$$');
+      await this.getCurrentLocation();
+    });
 
     await Font.loadAsync({
       Roboto: require('native-base/Fonts/Roboto.ttf'),
@@ -80,11 +85,12 @@ class HomeScreen extends React.Component {
   }
 
   componentWillUnmount() {
-    NetInfo.removeEventListener(this.handleConnectivityChange);
+    // NetInfo.removeEventListener(this.handleConnectivityChange);
+    this.navFocusListener.remove();
   }
 
   handleConnectivityChange = state => {
-    this.setState({isConnected:state.isConnected});
+    this.setState({ isConnected: state.isConnected });
 
     if (state.isConnected) {
       console.log('Online');
@@ -99,7 +105,7 @@ class HomeScreen extends React.Component {
       });
     }
   };
- 
+
   getLocation = async () => {
     let { status } = await Permissions.askAsync(Permissions.LOCATION);
 
@@ -132,7 +138,7 @@ class HomeScreen extends React.Component {
           message: 'Please enter the required tag report data'
         });
       })
-      .catch(e => console.log(e));
+      .catch(e => console.log('Unable  to locate device', e));
   };
 
   createTagReport = async () => {
@@ -173,6 +179,8 @@ class HomeScreen extends React.Component {
     );
 
     try {
+    
+      await DataStore.save(new TagReports({ ...tagReport }));
 
       this.clearTagReportState();
       this.getLocation();
@@ -182,7 +190,7 @@ class HomeScreen extends React.Component {
         errorMessage: 'Unable to submit tag report'
       });
       alert(err.message);
-     
+
       Toast.show({
         text: 'Unable to submit tag report',
         buttonText: 'Okay',
@@ -258,8 +266,10 @@ class HomeScreen extends React.Component {
         errorMessage:
           'Oops, this will not work on Sketch in an Android emulator. Try it on your device!'
       });
+      console.log('NOT calling getLocation$$$$$');
       this.setState({ tagArea: 'Key Largo, FL' });
     } else {
+      console.log('calling getLocation$$$$$');
       await this.getLocation();
     }
   };
@@ -419,9 +429,7 @@ class HomeScreen extends React.Component {
   };
 
   getConnectionInfo = () => {
-    return !this.state.isConnected ? (
-      <OfflineNotice  />
-    ) : null;
+    return !this.state.isConnected ? <OfflineNotice /> : null;
   };
 
   getFishLengthPlaceHolderText() {
@@ -436,13 +444,7 @@ class HomeScreen extends React.Component {
   }
 }
 
-function mapDispatchToProps(dispatch) {
-  return {
-    updateConnectionState: status => dispatch(connectionState(status))
-  };
-}
-
-export default connect(null, mapDispatchToProps)(HomeScreen);
+export default HomeScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -452,24 +454,24 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: '#0B7EA0',
     paddingLeft: 20,
-    paddingRight: 20,
-    paddingTop: 20
+    paddingRight: 20
   },
   screen: {
     backgroundColor: '#0B7EA0'
   },
   paragraph: {
-    fontSize: 17,
+    fontSize: 12,
     textAlign: 'center',
-    color: '#efefef',
-    marginBottom: 30
+    color: '#ccc',
+    marginBottom: 10,
+    fontStyle: 'italic'
   },
   locationText: {
     margin: 10,
     fontSize: 24,
     textAlign: 'center',
     color: '#efefef',
-    marginBottom: 30
+    marginBottom: 20
   },
   location: {
     margin: 5,

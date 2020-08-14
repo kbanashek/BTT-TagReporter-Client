@@ -3,6 +3,10 @@ import { StyleSheet, View, Text, TouchableOpacity, Image } from 'react-native';
 
 import * as Font from 'expo-font';
 import { AppLoading } from 'expo';
+//import Amplify from '@aws-amplify/core';
+// import awsmobile from './../../../aws-exports';
+import { DataStore } from '@aws-amplify/datastore';
+import {TagReports} from '../../../src/models';
 
 const logo = require('../images/site-logo.png');
 
@@ -25,6 +29,10 @@ export default class WelcomeScreen extends React.Component {
   async componentDidMount() {
     this.loadFontsAsync();
   }
+
+ 
+
+
 
   componentWillUnmount() {
     this.willFocusListener.remove();

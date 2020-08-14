@@ -1,110 +1,47 @@
-import React from 'react';
-import { createMaterialTopTabNavigator } from 'react-navigation-tabs';
+import React , { ReactElement } from 'react';
+import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
+import {
+  
+  createAppContainer
+} from 'react-navigation';
 import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from './src/components/screens/HomeScreen';
 import SettingsScreen from './src/components/screens/SettingsScreen';
 import TagLogScreen from './src/components/screens/TagLogScreen';
-
-const appTabNavigatorConfig = {
-  ['Report Tag']: {
-    screen: HomeScreen,
-    navigationOptions: {
-      tabBarLabel: 'Report Tag',
-      tabBarIcon: ({ tintColor }) => (
-        <Ionicons style={{ fontSize: 26, color: tintColor }} name="ios-home" />
-      )
-    }
-  },
-  ['Tag Log']: {
-    screen: TagLogScreen,
-    navigationOptions: {
-      tabBarLabel: 'Tag Log',
-      tabBarIcon: ({ tintColor }) => (
-        <Ionicons
-          style={{ fontSize: 26, color: tintColor }}
-          name="ios-person"
-        />
-      )
-    }
-  },
-  Settings: {
-    screen: SettingsScreen,
-    navigationOptions: {
-      tabBarLabel: 'Settings',
-      tabBarIcon: ({ tintColor }) => (
-        <Ionicons
-          style={{ fontSize: 26, color: tintColor }}
-          name="ios-settings"
-        />
-      )
-    }
-  },
-  ['Sign Out']: {
-    screen: SettingsScreen,
-    navigationOptions: {
-      tabBarLabel: 'Settings',
-      tabBarIcon: ({ tintColor }) => (
-        <Ionicons
-          style={{ fontSize: 26, color: tintColor }}
-          name="ios-settings"
-        />
-      )
-    }
-  }
+const Tab = createMaterialBottomTabNavigator();
+const TabBarIcon = focused => {
+  return (
+    <Image
+      style={{
+        width: focused ? 24 : 18,
+        height: focused ? 24 : 18,
+      }}
+      source={IC_MASK}
+    />
+  );
 };
+function AppTabNavigator() {
+  return (
+    <Tab.Navigator
+     
+    >
+      <Tab.Screen
+        name="Screen1"
+        component={SettingsScreen}
+        options={{
+          tabBarLabel: 'Screen1',
+          tabBarIcon: ({ focused }) => 
+            TabBarIcon(focused),
+        }}
+      />
+      <Tab.Screen name="Screen2" component={HomeScreen} />
+      <Tab.Screen name="Screen3" component={SettingsScreen} />
+      <Tab.Screen name="Screen4" component={SettingsScreen} />
+    </Tab.Navigator>
+  );
+}
 
-const appTabNavigatorOptions = {
-  tabBarPosition: 'top',
-  swipeEnabled: true,
-  animationEnabled: true,
-  navigationOptions: {
-    tabBarVisible: false,
-  },
-  tabBarOptions: {
-    showLabel: false,
-    activeTintColor: '#fff',
-    inactiveTintColor: '#fff9',
-    style: {
-      backgroundColor: '#00BCB4',
-      height: 60
-    },
-    labelStyle: {
-      fontSize: 12,
-      fontWeight: 'bold',
-    
-    },
-    indicatorStyle: {
-      height: 0
-    },
-    showIcon: true
-  },
-  defaultNavigationOptions: {
-    tabBarVisible: false,
-    headerStyle: {
-      backgroundColor: '#efefef'
-    },
-    headerTintColor: '#ccc',
-    headerTitleStyle: {
-      fontWeight: 'bold'
-    }
-  }
-};
 
-export const AppTabNavigator = createMaterialTopTabNavigator(
-  appTabNavigatorConfig,
-  appTabNavigatorOptions
-);
+const TabNavigator = createAppContainer(AppTabNavigator);
 
-AppTabNavigator.navigationOptions = ({ navigation }) => {
-  let { routeName } = navigation.state.routes[navigation.state.index];
-  let headerTitle = routeName;
-  return {
-    headerStyle: {
-      backgroundColor: '#efefef',
-      color: 'white',
-      activeTintColor: '#fff',
-      inactiveTintColor: '#fff9'
-    },
-    headerTitle
-  };
-};
+export default TabNavigator;

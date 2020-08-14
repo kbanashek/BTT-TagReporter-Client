@@ -1,18 +1,22 @@
 import React from 'react';
-import { TouchableOpacity, View, Platform } from 'react-native';
-import { createSwitchNavigator, createAppContainer } from 'react-navigation';
-
-import { createDrawerNavigator } from 'react-navigation-drawer';
+import { TouchableOpacity, View, Platform, Image, Text } from 'react-native';
+import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
+import { createDrawerNavigator } from 'react-navigation-drawer';
+
+import { createMaterialBottomTabNavigator } from 'react-navigation-material-bottom-tabs';
+
 import { Root } from 'native-base';
 import { Provider } from 'react-redux';
 import { createStore, applyMiddleware } from 'redux';
 import reducer from './src/components/app/reducer';
 import thunk from 'redux-thunk';
-import * as Font from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
+import { AntDesign } from '@expo/vector-icons';
 import Amplify from '@aws-amplify/core';
 import awsmobile from './aws-exports';
+
+import * as Font from 'expo-font';
 
 import AuthLoadingScreen from './src/components/screens/AuthLoadingScreen';
 import WelcomeScreen from './src/components/screens/WelcomeScreen';
@@ -22,46 +26,71 @@ import ForgetPasswordScreen from './src/components/screens/ForgetPasswordScreen'
 import HomeScreen from './src/components/screens/HomeScreen';
 import SettingsScreen from './src/components/screens/SettingsScreen';
 import TagLogScreen from './src/components/screens/TagLogScreen';
-import ImagePickerExample from './src/components/screens/PhotoRecord';
-import { useFonts } from 'expo-font';
 
-import { AppTabNavigator } from './appTabNavigatorConfig';
-import { DrawerComponent } from './DrawerComponent';
+const logo = require('./assets/header.png');
 
 Amplify.configure(awsmobile);
 
+import { YellowBox } from 'react-native';
+import COLORS from './src/constants/constants';
 
-const HEADER_HEIGHT = Platform.OS === 'ios' ? 60 : 50;
-
-const AppStackNavigator = createStackNavigator({
-  Header: {
-    screen: AppTabNavigator,
-
-    navigationOptions: ({ navigation }) => ({
-      headerLeft: (
-        <TouchableOpacity onPress={() => navigation.toggleDrawer()}>
-          <View style={{ paddingHorizontal: 30 }}>
-            <Ionicons size={32} name="md-menu" />
-          </View>
-        </TouchableOpacity>
+// Configurations and options for the AppTabNavigator
+const configurations = {
+  Home: {
+    screen: HomeScreen,
+    navigationOptions: {
+      tabBarLabel: 'Report Tag',
+      tabBarIcon: ({ tintColor }) => (
+        <AntDesign
+          name="tagso"
+          style={{ fontSize: 26, color: tintColor, paddingBottom: 35 }}
+        />
       )
-    })
-  }
-});
-
-const AppDrawerNavigator = createDrawerNavigator(
-  {
-    Menu: AppStackNavigator,
-    ['Report Tags']: HomeScreen,
-    ['Tag Log']: TagLogScreen,
-    Settings: SettingsScreen,
-    ['Sign Out']: SettingsScreen,
-    ImagePickerExample: ImagePickerExample,
+    }
   },
-  {
-    contentComponent: DrawerComponent
+  Profile: {
+    screen: TagLogScreen,
+    navigationOptions: {
+      tabBarLabel: 'Tag Log',
+      tabBarIcon: ({ tintColor }) => (
+        <AntDesign
+          name="book"
+          style={{ fontSize: 26, color: tintColor, paddingBottom: 35 }}
+        />
+      )
+    }
+  },
+  Settings: {
+    screen: SettingsScreen,
+    navigationOptions: {
+      tabBarLabel: 'Settings',
+      tabBarIcon: ({ tintColor }) => (
+        <Ionicons
+          style={{ fontSize: 26, color: tintColor }}
+          name="ios-settings"
+        />
+      )
+    }
   }
+};
+
+const options = {
+  initialRouteName: 'Home',
+  activeColor: '#f0edf6',
+  inactiveColor: '#226557',
+
+  barStyle: { backgroundColor: '#00BCB4' }
+};
+
+// Bottom App tabs
+const AppTabNavigator = createMaterialBottomTabNavigator(
+  configurations,
+  options
 );
+
+const AppStackNavigator = createAppContainer(AppTabNavigator);
+
+// App stack for the drawer
 
 const authStackNavigationOptions = {
   initialRouteName: 'Welcome',
@@ -112,7 +141,7 @@ const AuthStackNavigator = createStackNavigator(
 const appNav = createSwitchNavigator({
   Authloading: AuthLoadingScreen,
   Auth: AuthStackNavigator,
-  App: AppDrawerNavigator,
+  App: AppStackNavigator,
   ForgetPassword: ForgetPasswordScreen
 });
 
@@ -121,11 +150,47 @@ const AppContainer = createAppContainer(appNav);
 const store = createStore(reducer, applyMiddleware(thunk));
 
 export default class App extends React.Component {
+
+  async loadFontsAsync() {
+    await Font.loadAsync({
+      'PermanentMarker-Regular': require('./assets/fonts/Permanent_Marker/PermanentMarker-Regular.ttf')
+    });
+    this.setState({ fontsLoaded: true });
+  }
+
+  async componentDidMount() {
+    this.loadFontsAsync();
+  }
+
   render() {
+    YellowBox.ignoreWarnings(['Warning: ViewPagerAndroid has been extracted']);
+
     return (
       <Provider store={store}>
         <Root>
-          
+          <View
+            style={{
+              flex: 0.06,
+              backgroundColor: '#ecf0f1',
+              flexDirection: 'row',
+              alignItems: 'center',
+              minHeight: Platform.OS === 'ios' ? 50 : 70,
+              paddingTop:Platform.OS === 'ios' ? 50 : 45,
+              paddingBottom: Platform.OS === 'ios' ? 5 : 1,
+              borderBottomColor: COLORS.BUTTON_ENABLED,
+              borderBottomWidth: Platform.OS === 'ios' ? 5 : 5
+            }}
+          >
+            <Image
+              source={logo}
+              style={{
+                width: 300,
+                height: 40
+              }}
+             
+            />
+            
+          </View>
           <AppContainer />
         </Root>
       </Provider>

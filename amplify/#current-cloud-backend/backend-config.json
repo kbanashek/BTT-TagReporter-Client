@@ -44,5 +44,5 @@
 		  "service":"SNS",
 		  "providerPlugin":"awscloudformation"
 		}
-	  },
+	  }
 }

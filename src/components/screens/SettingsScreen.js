@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Keyboard,
   View,
-  Alert,
+  Alert
 } from 'react-native';
 import { Container, Item, Input } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,11 +19,11 @@ import COLORS from '../../constants/constants';
 export default class SettingsScreen extends React.Component {
   state = {
     password1: '',
-    password2: '',
+    password2: ''
   };
   onChangeText(key, value) {
     this.setState({
-      [key]: value,
+      [key]: value
     });
   }
   // Change user password for the app
@@ -54,11 +54,11 @@ export default class SettingsScreen extends React.Component {
         {
           text: 'Cancel',
           onPress: () => console.log('Canceled'),
-          style: 'cancel',
+          style: 'cancel'
         },
-        { text: 'OK', onPress: () => this.signOut() },
+        { text: 'OK', onPress: () => this.signOut() }
       ],
-      { cancelable: false },
+      { cancelable: false }
     );
   };
 
@@ -75,19 +75,18 @@ export default class SettingsScreen extends React.Component {
     return (
       <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView
-             style={styles.container}
-             behavior={Platform.OS === "ios" ? "padding" : null}
-             style={{ flex: 1 }}
+          style={styles.innerContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : null}
+          style={{ flex: 1 }}
         >
           <TouchableWithoutFeedback
-            style={styles.container}
+            style={styles.innerContainer}
             onPress={Keyboard.dismiss}
           >
-            <View style={styles.container}>
+            <View style={styles.innerContainer}>
               {/*Infos*/}
               <Container style={styles.infoContainer}>
-                <View style={styles.container}>
-                  
+                <View style={styles.innerContainer}>
                   {/* Old password */}
                   <Item style={styles.itemStyle}>
                     <Ionicons style={styles.iconStyle} name="ios-lock" />
@@ -134,13 +133,13 @@ export default class SettingsScreen extends React.Component {
                     style={{
                       justifyContent: 'center',
                       alignItems: 'center',
-                      marginBottom: 20,
+                      marginBottom: 20
                     }}
                   />
                   <TouchableOpacity
                     style={[
                       styles.buttonStyle,
-                      { flexDirection: 'row', justifyContent: 'center' },
+                      { flexDirection: 'row', justifyContent: 'center' }
                     ]}
                     onPress={this.signOutAlert}
                   >
@@ -166,12 +165,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#0B7EA0',
     justifyContent: 'center',
     flexDirection: 'column',
+    paddingTop: 10,
+  },
+  innerContainer: {
+    flex: 1,
+    backgroundColor: '#0B7EA0',
+    justifyContent: 'center',
+    flexDirection: 'column'
   },
   input: {
     flex: 1,
     fontSize: 17,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#fff'
   },
   infoContainer: {
     position: 'absolute',
@@ -182,15 +188,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
-    backgroundColor: '#0B7EA0',
+    backgroundColor: '#0B7EA0'
   },
   itemStyle: {
-    marginTop: 20,
+    marginTop: 20
   },
   iconStyle: {
     color: '#fff',
     fontSize: 28,
-    marginRight: 15,
+    marginRight: 15
   },
   buttonStyle: {
     alignItems: 'center',
@@ -198,11 +204,11 @@ const styles = StyleSheet.create({
     padding: 14,
     marginTop: 20,
     borderRadius: 4,
-    width: '96%',
+    width: '96%'
   },
   buttonText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
-  },
+    color: '#fff'
+  }
 });
