@@ -1,12 +1,9 @@
 import React from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Image } from 'react-native';
-
 import * as Font from 'expo-font';
 import { AppLoading } from 'expo';
-//import Amplify from '@aws-amplify/core';
-// import awsmobile from './../../../aws-exports';
 import { DataStore } from '@aws-amplify/datastore';
-import {TagReports} from '../../../src/models';
+import { TagReports } from '../../../src/models';
 
 const logo = require('../images/site-logo.png');
 
@@ -27,12 +24,8 @@ export default class WelcomeScreen extends React.Component {
   }
 
   async componentDidMount() {
-    this.loadFontsAsync();
+    await this.loadFontsAsync();
   }
-
- 
-
-
 
   componentWillUnmount() {
     this.willFocusListener.remove();
@@ -57,7 +50,7 @@ export default class WelcomeScreen extends React.Component {
             style={{
               marginTop: 70,
               width: 292,
-              marginBottom: 100,
+              marginBottom: 30,
               alignItems: 'center'
             }}
           >

@@ -19,8 +19,8 @@ import * as Permissions from 'expo-permissions';
 import moment from 'moment';
 import * as Font from 'expo-font';
 import RadioForm from 'react-native-simple-radio-button';
+import * as _ from 'lodash';
 import OfflineNotice from '../../components/screens/OfflineNotice';
-
 import species from '../data/species';
 import catchType from '../data/catchType';
 import locations from '../data/locations';
@@ -28,13 +28,14 @@ import COLORS from '../../constants/constants';
 
 import { DataStore } from '@aws-amplify/datastore';
 import { TagReports } from '../../models';
+import { initialHomeState } from '../data/homeScreenInitialState';
 
 class HomeScreen extends React.Component {
   constructor(props) {
     super(props);
   }
 
-  state = {
+  state  = {
     isConnected: true,
     user: null,
     location: null,
@@ -63,15 +64,16 @@ class HomeScreen extends React.Component {
   });
 
   async componentDidMount() {
-    // NetInfo.addEventListener(this.handleConnectivityChange);
-
     const { navigation } = this.props;
 
-     this.navFocusListener = await navigation.addListener('didFocus', async () => {
-      // do some API calls here
-      console.log('focused$$$$$');
-      await this.getCurrentLocation();
-    });
+    this.navFocusListener = await navigation.addListener(
+      'didFocus',
+      async () => {
+        // do some API calls here
+        console.log('focused$$$$$');
+        await this.getCurrentLocation();
+      }
+    );
 
     await Font.loadAsync({
       Roboto: require('native-base/Fonts/Roboto.ttf'),
@@ -85,7 +87,6 @@ class HomeScreen extends React.Component {
   }
 
   componentWillUnmount() {
-    // NetInfo.removeEventListener(this.handleConnectivityChange);
     this.navFocusListener.remove();
   }
 
@@ -156,14 +157,6 @@ class HomeScreen extends React.Component {
 
     const { phone_number, email } = user;
 
-    Toast.show({
-      text: 'Tag successfully submitted!',
-      buttonText: 'Okay',
-      duration: 5000,
-      position: 'bottom',
-      type: 'success'
-    });
-
     const tagReport = await this.formatTagReport(
       tagArea,
       email,
@@ -179,11 +172,22 @@ class HomeScreen extends React.Component {
     );
 
     try {
-    
-      await DataStore.save(new TagReports({ ...tagReport }));
 
-      this.clearTagReportState();
-      this.getLocation();
+      Toast.show({
+        text: 'Tag successfully submitted!',
+        buttonText: 'Okay',
+        duration: 5000,
+        position: 'bottom',
+        type: 'success'
+      });
+
+      const submitSuccess = await DataStore.save(
+        new TagReports({ ...tagReport })
+      );
+
+      await this.clearTagReportState();
+
+      await this.getLocation();
     } catch (err) {
       console.log('Warning!!! - error creating tarReport...', err);
       this.setState({
@@ -218,15 +222,18 @@ class HomeScreen extends React.Component {
     phone_number,
     recapture
   ) => {
+    const country = _.find(locations, { value: tagLocationCode }).label;
+
+    console.log('country code:', country);
     return {
-      tagArea,
+      tagArea: tagArea ? tagArea : country,
       email,
       fishType,
       comment,
       recapture,
       tagNumber: tagLocationCode + '-' + tagNumber,
       tagDate: moment().format(),
-      tagLocation: location,
+      tagLocation: location ? location : country,
       fishLength: fishLength + ' ' + user['custom:preferredMeasure'],
       guideName: user['custom:firstName'] + ' ' + user['custom:lastName'],
       phone: phone_number
@@ -238,13 +245,19 @@ class HomeScreen extends React.Component {
   };
 
   enableSubmission = value => {
-    const { tagNumber, fishType, fishLength, location, user } = this.state;
+    const {
+      tagNumber,
+      fishType,
+      fishLength,
+      tagLocationCode,
+      user
+    } = this.state;
 
     const isButtonDisabled =
       this.isEmpty(tagNumber) ||
       this.isEmpty(fishType) ||
       this.isEmpty(fishLength) ||
-      this.isEmpty(location) ||
+      this.isEmpty(tagLocationCode) ||
       this.isEmpty(user);
 
     this.setState({ isDisabled: isButtonDisabled });
@@ -274,16 +287,17 @@ class HomeScreen extends React.Component {
     }
   };
 
-  clearTagReportState() {
+  clearTagReportState = async () => {
     this.setState({
       fishLength: '',
       tagNumber: '',
       tagArea: null,
       comment: '',
       tagDate: null,
-      recapture: null
+      recapture: null,
+      isDisabled:true
     });
-  }
+  };
   renderLocationTag = () => {
     const locationSelectPlaceHolder = {
       label: 'Select tag region...',

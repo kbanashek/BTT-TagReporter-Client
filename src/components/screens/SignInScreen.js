@@ -32,7 +32,7 @@ export default class App extends React.Component {
     screenWidth: 0,
     containerHeight: 0,
     showImage: true,
-    username: 'kylebanashek@yahoo.com',
+    username: '',
     password: '',
     fadeIn: new Animated.Value(0),
     fadeOut: new Animated.Value(0),

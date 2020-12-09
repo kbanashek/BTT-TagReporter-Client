@@ -1,11 +1,8 @@
 import React from 'react';
-import { TouchableOpacity, View, Platform, Image, Text } from 'react-native';
+import { View, Platform, Image } from 'react-native';
 import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
-import { createDrawerNavigator } from 'react-navigation-drawer';
-
 import { createMaterialBottomTabNavigator } from 'react-navigation-material-bottom-tabs';
-
 import { Root } from 'native-base';
 import { Provider } from 'react-redux';
 import { createStore, applyMiddleware } from 'redux';
@@ -14,8 +11,8 @@ import thunk from 'redux-thunk';
 import { Ionicons } from '@expo/vector-icons';
 import { AntDesign } from '@expo/vector-icons';
 import Amplify from '@aws-amplify/core';
+import { Auth, Hub } from 'aws-amplify';
 import awsmobile from './aws-exports';
-
 import * as Font from 'expo-font';
 
 import AuthLoadingScreen from './src/components/screens/AuthLoadingScreen';
@@ -150,50 +147,79 @@ const AppContainer = createAppContainer(appNav);
 const store = createStore(reducer, applyMiddleware(thunk));
 
 export default class App extends React.Component {
+  state = {
+    user: null
+  };
 
-  async loadFontsAsync() {
+  getCurrentUser = async () => {
+    Auth.currentAuthenticatedUser()
+      .then(user => this.setState({ user: user }))
+      .catch(err => console.log(err));
+  };
+
+  loadFontsAsync = async () => {
     await Font.loadAsync({
       'PermanentMarker-Regular': require('./assets/fonts/Permanent_Marker/PermanentMarker-Regular.ttf')
     });
     this.setState({ fontsLoaded: true });
+  };
+
+  authListen = async () => {
+    Hub.listen('auth', (data) => {
+      const { payload } = data;
+      console.log('A new auth event has happened');
+      if (payload.event === 'signIn') {
+        this.setState({ user: payload });
+        console.log('a user has signed in!', data.attributes);
+      }
+      if (payload.event === 'signOut') {
+        console.log('a user has signed out!');
+        this.setState({ user: null });
+      }
+    });
   }
 
   async componentDidMount() {
-    this.loadFontsAsync();
+    await this.authListen();
+    await this.loadFontsAsync();
+    await this.getCurrentUser();
   }
 
   render() {
-    YellowBox.ignoreWarnings(['Warning: ViewPagerAndroid has been extracted']);
+    const { user } = this.state;
 
     return (
       <Provider store={store}>
         <Root>
-          <View
-            style={{
-              flex: 0.06,
-              backgroundColor: '#ecf0f1',
-              flexDirection: 'row',
-              alignItems: 'center',
-              minHeight: Platform.OS === 'ios' ? 50 : 70,
-              paddingTop:Platform.OS === 'ios' ? 50 : 45,
-              paddingBottom: Platform.OS === 'ios' ? 5 : 1,
-              borderBottomColor: COLORS.BUTTON_ENABLED,
-              borderBottomWidth: Platform.OS === 'ios' ? 5 : 5
-            }}
-          >
-            <Image
-              source={logo}
+          {!user ? null : (
+            <View
               style={{
-                width: 300,
-                height: 40
+                flex: 0.06,
+                backgroundColor: '#ecf0f1',
+                flexDirection: 'row',
+                alignItems: 'center',
+                minHeight: Platform.OS === 'ios' ? 50 : 70,
+                paddingTop: Platform.OS === 'ios' ? 50 : 45,
+                paddingBottom: Platform.OS === 'ios' ? 5 : 1,
+                borderBottomColor: COLORS.BUTTON_ENABLED,
+                borderBottomWidth: Platform.OS === 'ios' ? 5 : 5
               }}
-             
-            />
-            
-          </View>
+            >
+              <Image
+                source={logo}
+                style={{
+                  width: 300,
+                  height: 40,
+                  marginLeft: 60
+                }}
+              />
+            </View>
+          )}
           <AppContainer />
         </Root>
       </Provider>
     );
   }
 }
+ 
+

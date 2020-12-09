@@ -10,23 +10,21 @@ import {
 
 import { DataStore } from '@aws-amplify/datastore';
 import { TagReports } from '../../models';
-
 import { Container, Content, List, ListItem, Left, Body } from 'native-base';
 import moment from 'moment';
 import * as Font from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
-import COLORS from '../../constants/constants';
 
+import COLORS from '../../constants/constants';
 const bonefish = require('../../../assets/bonefish.png');
 const permit = require('../../../assets/permit.png');
-
 
 export default class TagLogScreen extends React.Component {
   state = { tagReports: [] };
 
-  
-
   async componentDidMount() {
+    const { navigation } = this.props;
+
     await Font.loadAsync({
       Roboto: require('native-base/Fonts/Roboto.ttf'),
       Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf'),
@@ -38,6 +36,11 @@ export default class TagLogScreen extends React.Component {
     DataStore.observe(TagReports).subscribe(msg => {
       //console.log('SUBSCRIPTION_UPDATE', msg);
       this.loadTagReports();
+    });
+
+    this.navFocusListener = await navigation.addListener('didFocus', () => {
+      console.log('REFOCUS');
+      // await this.loadTagReports();
     });
   }
 
@@ -64,12 +67,12 @@ export default class TagLogScreen extends React.Component {
 
   componentWillUnmount() {
     // this.focusListener.remove();
+    this.navFocusListener.remove();
   }
 
   render() {
     return (
       <SafeAreaView style={styles.container}>
-       
         <View style={styles.listContainer}>
           <Container>
             <Content>
@@ -171,8 +174,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0B7EA0',
     justifyContent: 'center',
-    flexDirection: 'column',
-
+    flexDirection: 'column'
   },
   listContainer: {
     flex: 1,

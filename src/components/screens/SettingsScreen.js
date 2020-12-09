@@ -87,7 +87,6 @@ export default class SettingsScreen extends React.Component {
               {/*Infos*/}
               <Container style={styles.infoContainer}>
                 <View style={styles.innerContainer}>
-                  {/* Old password */}
                   <Item style={styles.itemStyle}>
                     <Ionicons style={styles.iconStyle} name="ios-lock" />
                     <Input
@@ -104,10 +103,11 @@ export default class SettingsScreen extends React.Component {
                       onChangeText={value =>
                         this.onChangeText('password1', value)
                       }
+                      selectionColor="black"
                     />
                   </Item>
                   {/* New password */}
-                  <Item style={styles.itemStyle}>
+                  <Item style={[styles.itemStyle, { top: 0 }]}>
                     <Ionicons style={styles.iconStyle} name="ios-lock" />
                     <Input
                       style={styles.input}
@@ -121,6 +121,7 @@ export default class SettingsScreen extends React.Component {
                       onChangeText={value =>
                         this.onChangeText('password2', value)
                       }
+                      selectionColor="black"
                     />
                   </Item>
                   <TouchableOpacity
@@ -165,7 +166,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0B7EA0',
     justifyContent: 'center',
     flexDirection: 'column',
-    paddingTop: 10,
+    paddingTop: 10
   },
   innerContainer: {
     flex: 1,
@@ -174,16 +175,18 @@ const styles = StyleSheet.create({
     flexDirection: 'column'
   },
   input: {
-    flex: 1,
-    fontSize: 17,
-    fontWeight: 'bold',
-    color: '#fff'
+    height: 50,
+    fontSize: 20,
+    padding: 5,
+    borderRadius: 4,
+    color: COLORS.DARK_GREY,
+    backgroundColor: COLORS.LIGHT_GREY
   },
   infoContainer: {
     position: 'absolute',
     left: 0,
     right: 0,
-    height: 600,
+    
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -191,11 +194,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#0B7EA0'
   },
   itemStyle: {
-    marginTop: 20
+    marginTop: 18,
+
+    borderBottomWidth: 0
   },
   iconStyle: {
     color: '#fff',
-    fontSize: 28,
+    fontSize: 18,
     marginRight: 15
   },
   buttonStyle: {
@@ -204,7 +209,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginTop: 20,
     borderRadius: 4,
-    width: '96%'
+    
   },
   buttonText: {
     fontSize: 18,
