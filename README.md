@@ -1,6 +1,6 @@
 
 Install dependencies
-`npm install`
+`yarn install`
 
 Run locally
 `expo start`
