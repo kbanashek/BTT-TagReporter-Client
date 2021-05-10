@@ -4,9 +4,7 @@ import {
   SafeAreaView,
   View,
   Text,
-  ImageBackground,
-  Image
-} from 'react-native';
+  ImageBackground} from 'react-native';
 
 import { DataStore } from '@aws-amplify/datastore';
 import { TagReports } from '../../models';
@@ -15,7 +13,6 @@ import moment from 'moment';
 import * as Font from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
 
-import COLORS from '../../constants/constants';
 const bonefish = require('../../../assets/bonefish.png');
 const permit = require('../../../assets/permit.png');
 
@@ -25,16 +22,11 @@ export default class TagLogScreen extends React.Component {
   async componentDidMount() {
     const { navigation } = this.props;
 
-    await Font.loadAsync({
-      Roboto: require('native-base/Fonts/Roboto.ttf'),
-      Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf'),
-      'PermanentMarker-Regular': require('../../../assets/fonts/Permanent_Marker/PermanentMarker-Regular.ttf')
-    });
+    //await this.loadFonts();
 
     await this.loadTagReports();
 
-    DataStore.observe(TagReports).subscribe(msg => {
-      //console.log('SUBSCRIPTION_UPDATE', msg);
+    DataStore.observe(TagReports).subscribe(() => {
       this.loadTagReports();
     });
 
@@ -44,11 +36,21 @@ export default class TagLogScreen extends React.Component {
     });
   }
 
+  componentWillUnmount() {
+    this.navFocusListener.remove();
+  }
+
+  async loadFonts() {
+    // await Font.loadAsync({
+    //   Roboto: require('native-base/Fonts/Roboto.ttf'),
+    //   Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf'),
+    //   'PermanentMarker-Regular': require('../../../assets/fonts/Permanent_Marker/PermanentMarker-Regular.ttf')
+    // });
+  }
+
   async loadTagReports() {
     try {
       const tagReports = await DataStore.query(TagReports);
-      //console.log('tagsssss',tagReports);
-
       const sortByTagDate = (a, b) => {
         const dateA = new Date(a.tagDate).getTime();
         const dateB = new Date(b.tagDate).getTime();
@@ -65,18 +67,13 @@ export default class TagLogScreen extends React.Component {
     }
   }
 
-  componentWillUnmount() {
-    // this.focusListener.remove();
-    this.navFocusListener.remove();
-  }
-
   render() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.listContainer}>
           <Container>
             <Content>
-              <List style={styles.listContainer}>
+              <List style={styles.list}>
                 {this.state.tagReports.map((tagReport, index) => (
                   <ListItem key={index}>
                     <Left
@@ -91,17 +88,7 @@ export default class TagLogScreen extends React.Component {
                           source={bonefish}
                           style={{ width: '100%', height: '100%' }}
                         >
-                          <View
-                            style={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              bottom: 80,
-                              justifyContent: 'center',
-                              alignItems: 'center'
-                            }}
-                          >
+                          <View style={styles.tagDetailRow}>
                             <Text style={styles.textStyleSM}>
                               {tagReport.fishType.substring(0, 1).toUpperCase()}
                               {tagReport.fishType.substring(
@@ -116,17 +103,7 @@ export default class TagLogScreen extends React.Component {
                           source={permit}
                           style={{ width: '100%', height: '100%' }}
                         >
-                          <View
-                            style={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              bottom: 80,
-                              justifyContent: 'center',
-                              alignItems: 'center'
-                            }}
-                          >
+                          <View style={styles.tagDetailRow}>
                             <Text style={styles.textStyleSM}>
                               {tagReport.fishType.substring(0, 1).toUpperCase()}
                               {tagReport.fishType.substring(
@@ -173,32 +150,43 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0B7EA0',
-    justifyContent: 'center',
+
     flexDirection: 'column'
   },
   listContainer: {
     flex: 1,
     backgroundColor: '#0B7EA0',
     justifyContent: 'center',
-    flexDirection: 'column'
+    height: 8000
   },
-
+  list: {
+    backgroundColor: '#0B7EA0'
+  },
   textStyle: {
     fontSize: 14,
     padding: 2,
     color: '#fff',
     fontWeight: 'bold'
   },
+  tagDetailRow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 80,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
   textStyleSM: {
     fontSize: 18,
     paddingTop: 2,
     color: '#fff',
-    fontFamily: 'PermanentMarker-Regular'
+    // fontFamily: 'PermanentMarker-Regular'
   },
   speciesType: {
     fontSize: 16,
     fontWeight: 'bold',
-    fontFamily: 'PermanentMarker-Regular',
+    // fontFamily: 'PermanentMarker-Regular',
     color: '#fff'
   },
   iconStyle: {

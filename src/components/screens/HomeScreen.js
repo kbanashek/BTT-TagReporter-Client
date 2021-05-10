@@ -4,7 +4,9 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Platform
+  Platform,
+  Dimensions,
+  Keyboard
 } from 'react-native';
 
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -28,14 +30,26 @@ import COLORS from '../../constants/constants';
 
 import { DataStore } from '@aws-amplify/datastore';
 import { TagReports } from '../../models';
-import { initialHomeState } from '../data/homeScreenInitialState';
+import {
+  WebViewLeaflet,
+  WebViewLeafletEvents,
+  AnimationType
+} from 'react-native-webview-leaflet';
+
+// const icon = WebViewLeaflet.icon({
+//   iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
+//   iconUrl: require('leaflet/dist/images/marker-icon.png'),
+//   shadowUrl: require('leaflet/dist/images/marker-shadow.png')
+// })
+
+const appIcon = require('../../../assets/icon.png');
 
 class HomeScreen extends React.Component {
   constructor(props) {
     super(props);
   }
 
-  state  = {
+  state = {
     isConnected: true,
     user: null,
     location: null,
@@ -56,7 +70,11 @@ class HomeScreen extends React.Component {
     phone: '',
     isDisabled: true,
     recapture: 'false',
-    showToast: false
+    showToast: false,
+    positionMarker: {},
+    mapMarkers: [],
+    mapZoom: 16,
+    showMap: true
   };
 
   static navigationOptions = () => ({
@@ -66,28 +84,53 @@ class HomeScreen extends React.Component {
   async componentDidMount() {
     const { navigation } = this.props;
 
-    this.navFocusListener = await navigation.addListener(
-      'didFocus',
-      async () => {
-        // do some API calls here
-        console.log('focused$$$$$');
-        await this.getCurrentLocation();
-      }
-    );
+    // this.navFocusListener = await navigation.addListener(
+    //   'didFocus',
+    //   async () => {
+    //     // do some API calls here
+    //     console.log('focused$$$$$');
+    //     await this.getCurrentLocation();
+    //   }
+    // );
 
-    await Font.loadAsync({
-      Roboto: require('native-base/Fonts/Roboto.ttf'),
-      Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf'),
-      'PermanentMarker-Regular': require('../../../assets/fonts/Permanent_Marker/PermanentMarker-Regular.ttf')
-    });
+    // await Font.loadAsync({
+    //   Roboto: require('native-base/Fonts/Roboto.ttf'),
+    //   Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf'),
+    //   'PermanentMarker-Regular': require('../../../assets/fonts/Permanent_Marker/PermanentMarker-Regular.ttf')
+    // });
+  }
 
+  componentDidMount = async () => {
     await this.getCurrentUser();
 
     await this.getCurrentLocation();
-  }
+
+    const headerHeight = 78;
+    this.keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        console.log('keyboard shown');
+        this.setState({
+          // containerHeight: height - endCoordinates.height - headerHeight,
+          showMap: false
+        });
+      }
+    );
+    this.keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        console.log('keyboard hidden');
+        this.setState({
+          // containerHeight: height - headerHeight,
+          showMap: true
+        });
+      }
+    );
+  };
 
   componentWillUnmount() {
-    this.navFocusListener.remove();
+    this.keyboardDidShowListener.remove();
+    this.keyboardDidHideListener.remove();
   }
 
   handleConnectivityChange = state => {
@@ -116,30 +159,56 @@ class HomeScreen extends React.Component {
       });
     }
 
-    Location.getCurrentPositionAsync({})
+    Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.High,
+      // enableHighAccuracy: true
+      timeout: 5000
+    })
       .then(location => {
         this.setState({ currentPosition: location.coords });
-        const latLong = `lat:=${location.coords.latitude} long:=${location.coords.longitude}`;
+        console.log('location.coords.latitude', location.coords.latitude);
+        const latLong = {
+          lat: location.coords.latitude,
+          lng: location.coords.longitude
+        };
 
-        if (location.coords) {
-          Location.reverseGeocodeAsync({
-            longitude: location.coords.longitude,
-            latitude: location.coords.latitude
-          }).then(area => {
-            if (area.length) {
-              const { city, region, country, name } = area[0];
-              const locatedArea = city + ', ' + region + ', ' + country;
-              console.log('location NAME:', name);
-              this.setState({ tagArea: locatedArea });
-            }
-          });
-        }
+        console.log('>> LOCATION', latLong);
+
         this.setState({
           location: latLong,
-          message: 'Please enter the required tag report data'
+          message:
+            'Please select the tag location on the map and enter the required tag report data'
         });
+
+        // if (location.coords) {
+        //   Location.reverseGeocodeAsync({
+        //     longitude: location.coords.longitude,
+        //     latitude: location.coords.latitude
+        //   }).then(area => {
+        //     if (area.length) {
+        //       const { city, region, country, name } = area[0];
+        //       const locatedArea = city + ', ' + region + ', ' + country;
+        //       console.log('location NAME:', name);
+        //       this.setState({ tagArea: locatedArea });
+        //     }
+        //   });
+        // }
       })
-      .catch(e => console.log('Unable  to locate device', e));
+      .catch(e => {
+        console.log('Unable to locate device', e);
+
+        const latLong = {
+          lat: 37.0902,
+          lng: -95.7129
+        };
+
+        this.setState({
+          location: latLong,
+          message:
+            'Please select the tag location on the map and enter the required tag report data',
+          mapZoom: 3
+        });
+      });
   };
 
   createTagReport = async () => {
@@ -152,10 +221,18 @@ class HomeScreen extends React.Component {
       tagArea,
       user,
       tagLocationCode,
-      recapture
+      recapture,
+      mapMarkers
     } = this.state;
 
     const { phone_number, email } = user;
+
+    // if (!tagLocationLatLong) {
+    //   alert('Please select a tag location on the map');
+    //   return;
+    // }
+
+    const tagLocationLatLong = `${mapMarkers[0].position.lat},${mapMarkers[0].position.lng}`;
 
     const tagReport = await this.formatTagReport(
       tagArea,
@@ -164,7 +241,7 @@ class HomeScreen extends React.Component {
       comment,
       tagLocationCode,
       tagNumber,
-      location,
+      tagLocationLatLong,
       fishLength,
       user,
       phone_number,
@@ -172,7 +249,6 @@ class HomeScreen extends React.Component {
     );
 
     try {
-
       Toast.show({
         text: 'Tag successfully submitted!',
         buttonText: 'Okay',
@@ -250,7 +326,8 @@ class HomeScreen extends React.Component {
       fishType,
       fishLength,
       tagLocationCode,
-      user
+      user,
+      mapMarkers
     } = this.state;
 
     const isButtonDisabled =
@@ -270,7 +347,7 @@ class HomeScreen extends React.Component {
   getCurrentUser = async () => {
     Auth.currentAuthenticatedUser()
       .then(user => this.setState({ user: user.attributes }))
-      .catch(err => console.log(err));
+      .catch(err => console.log('could not authenticate user >>>>', err));
   };
 
   getCurrentLocation = async () => {
@@ -295,9 +372,10 @@ class HomeScreen extends React.Component {
       comment: '',
       tagDate: null,
       recapture: null,
-      isDisabled:true
+      isDisabled: true
     });
   };
+
   renderLocationTag = () => {
     const locationSelectPlaceHolder = {
       label: 'Select tag region...',
@@ -316,122 +394,37 @@ class HomeScreen extends React.Component {
     );
   };
 
-  render() {
-    let message = 'Locating.....';
+  onMapSelection = message => {
+    switch (message.event) {
+      case WebViewLeafletEvents.ON_MAP_MARKER_CLICKED:
+        // alert(
+        //   `Map Marker Touched, ID: ${message.payload.mapMarkerID || "unknown"}`
+        // );
 
-    let fishLengthPlaceHolder = this.getFishLengthPlaceHolderText();
+        break;
+      case WebViewLeafletEvents.ON_MAP_TOUCHED:
+        const position = message.payload;
 
-    if (this.state.errorMessage) {
-    } else if (this.state.location) {
-      message = this.state.message;
+        console.log(
+          `Map Touched at:`,
+          `${JSON.stringify(position.touchLatLng)}`
+        );
+        const mapMarker = {
+          id: '1',
+          position: position.touchLatLng,
+          icon: '&#128031',
+          title: 'Selected Tag Location',
+          size: [32, 32]
+        };
+        const mapMarkers = [];
+        mapMarkers.push(mapMarker);
+        this.setState({ mapMarkers: mapMarkers });
+        this.enableSubmission(mapMarkers);
+        break;
+      default:
+      //console.log("App received", message);
     }
-
-    return (
-      <KeyboardAwareScrollView
-        style={styles.screen}
-        enableOnAndroid={true}
-        enableAutoAutomaticScroll="true"
-        keyboardOpeningTime={0}
-        extraScrollHeight={50}
-      >
-        <View style={styles.container}>
-          {this.getConnectionInfo()}
-          {this.renderLocation()}
-          <Text style={styles.paragraph}>{message}</Text>
-          <RadioForm
-            ref="radioForm"
-            radio_props={species}
-            initial={this.state.fishType}
-            formHorizontal={true}
-            labelHorizontal={true}
-            buttonColor={'#2196f3'}
-            animation={true}
-            buttonSize={50}
-            buttonOuterSize={55}
-            labelStyle={{
-              fontSize: 17,
-              color: 'white',
-              padding: 10
-            }}
-            onPress={value => {
-              this.setState({ fishType: value });
-            }}
-            style={{
-              padding: 5
-            }}
-          />
-          <View style={styles.dropDownInput}>{this.renderLocationTag()}</View>
-          <Item style={styles.itemStyle}>
-            <Input
-              style={styles.input}
-              placeholderTextColor={COLORS.MEDIUM_GREY}
-              onChangeText={v => this.onChange('tagNumber', v)}
-              value={this.state.tagNumber}
-              placeholder="Tag Number (do not include prefix)"
-            />
-          </Item>
-          <Item style={styles.itemStyle}>
-            <Input
-              style={styles.input}
-              placeholderTextColor={COLORS.MEDIUM_GREY}
-              onChangeText={v => this.onChange('fishLength', v)}
-              value={this.state.fishLength}
-              placeholder={fishLengthPlaceHolder}
-              keyboardType={'phone-pad'}
-            />
-          </Item>
-          <Item style={styles.itemStyle}>
-            <Input
-              placeholderTextColor={COLORS.MEDIUM_GREY}
-              style={styles.input}
-              onChangeText={v => this.onChange('comment', v)}
-              value={this.state.comment}
-              placeholder="Comment"
-            />
-          </Item>
-          <RadioForm
-            radio_props={catchType}
-            initial={this.state.recapture}
-            formHorizontal={true}
-            labelHorizontal={true}
-            buttonColor={'#2196f3'}
-            animation={true}
-            buttonSize={30}
-            buttonOuterSize={35}
-            labelStyle={{
-              color: 'white'
-            }}
-            onPress={value => {
-              this.setState({ recapture: value });
-            }}
-          />
-          <View style={styles.loginButtonSection}>
-            <TouchableOpacity
-              onPress={() => this.createTagReport()}
-              style={[
-                styles.buttonStyle,
-                {
-                  backgroundColor: this.state.isDisabled ? '#efefef' : '#00BCB4'
-                }
-              ]}
-              disabled={this.state.isDisabled}
-            >
-              <Text
-                style={[
-                  styles.buttonText,
-                  {
-                    color: this.state.isDisabled ? '#ccc' : '#fff'
-                  }
-                ]}
-              >
-                Submit Tag Report
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </KeyboardAwareScrollView>
-    );
-  }
+  };
 
   renderLocation = () => {
     return this.state.tagArea ? (
@@ -441,6 +434,177 @@ class HomeScreen extends React.Component {
       </View>
     ) : null;
   };
+
+  renderMap = () => {
+    const baseLayerMaps = [
+      {
+        zIndex: 1,
+        subdomains: '0123',
+        maxZoom: 22,
+        attribution: 'Google maps',
+        url: 'http://mt{s}.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}&s=Ga'
+      }
+    ];
+
+    return this.state.location ? (
+      <View style={{ height: 275, backgroundColor: '#ccc', zIndex: 100 }}>
+        <WebViewLeaflet
+          onMessageReceived={this.onMapSelection}
+          mapLayers={baseLayerMaps}
+          mapCenterPosition={this.state.location}
+          ownPositionMarker={{
+            position: this.state.location,
+            size: [32, 32],
+            animation: {
+              duration: 220,
+              delay: 0
+            }
+          }}
+          zoom={this.state.mapZoom}
+          mapMarkers={this.state.mapMarkers}
+        />
+      </View>
+    ) : (
+      <View
+        style={{
+          height: 275,
+          backgroundColor: '#ccc',
+          textAlign: 'center',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}
+      >
+        <Text
+          style={{
+            textAlign: 'center',
+            fontWeight: 'bold',
+            fontSize: 18,
+            marginTop: 0
+          }}
+        >
+          Loading Current Location...
+        </Text>
+      </View>
+    );
+  };
+
+  SCREEN_HEIGHT = Dimensions.get('screen').height;
+
+  render() {
+    let message = '';
+
+    let fishLengthPlaceHolder = this.getFishLengthPlaceHolderText();
+
+    if (this.state.errorMessage) {
+    } else if (this.state.location) {
+      message = this.state.message;
+    }
+
+    return (
+      <View style={{ flex: 1 }}>
+        {this.state.showMap ? <View>{this.renderMap()}</View> : null}
+        <KeyboardAwareScrollView enableOnAndroid={true} keyboardOpeningTime={0}>
+          <View style={styles.container}>
+            {this.getConnectionInfo()}
+            {this.renderLocation()}
+            <Text style={styles.paragraph}>{message}</Text>
+            <RadioForm
+              ref="radioForm"
+              radio_props={species}
+              initial={this.state.fishType}
+              formHorizontal={true}
+              labelHorizontal={true}
+              buttonColor={'#2196f3'}
+              animation={true}
+              buttonSize={50}
+              buttonOuterSize={55}
+              labelStyle={{
+                fontSize: 17,
+                color: 'white',
+                padding: 10
+              }}
+              onPress={value => {
+                this.setState({ fishType: value });
+              }}
+              style={{
+                padding: 5
+              }}
+            />
+            <View style={styles.dropDownInput}>{this.renderLocationTag()}</View>
+            <Item style={styles.itemStyle}>
+              <Input
+                style={styles.input}
+                placeholderTextColor={COLORS.MEDIUM_GREY}
+                onChangeText={v => this.onChange('tagNumber', v)}
+                value={this.state.tagNumber}
+                placeholder="Tag Number (do not include prefix)"
+              />
+            </Item>
+            <Item style={styles.itemStyle}>
+              <Input
+                style={styles.input}
+                placeholderTextColor={COLORS.MEDIUM_GREY}
+                onChangeText={v => this.onChange('fishLength', v)}
+                value={this.state.fishLength}
+                placeholder={fishLengthPlaceHolder}
+                keyboardType={'phone-pad'}
+              />
+            </Item>
+            <Item style={styles.itemStyle}>
+              <Input
+                placeholderTextColor={COLORS.MEDIUM_GREY}
+                style={styles.input}
+                onChangeText={v => this.onChange('comment', v)}
+                value={this.state.comment}
+                placeholder="Comment"
+              />
+            </Item>
+            <RadioForm
+              radio_props={catchType}
+              initial={this.state.recapture}
+              formHorizontal={true}
+              labelHorizontal={true}
+              buttonColor={'#2196f3'}
+              animation={true}
+              buttonSize={30}
+              buttonOuterSize={35}
+              labelStyle={{
+                color: 'white'
+              }}
+              onPress={value => {
+                this.setState({ recapture: value });
+              }}
+            />
+            <View style={styles.loginButtonSection}>
+              <TouchableOpacity
+                onPress={() => this.createTagReport()}
+                style={[
+                  styles.buttonStyle,
+                  {
+                    backgroundColor: this.state.isDisabled
+                      ? '#efefef'
+                      : '#00BCB4'
+                  }
+                ]}
+                disabled={this.state.isDisabled}
+              >
+                <Text
+                  style={[
+                    styles.buttonText,
+                    {
+                      color: this.state.isDisabled ? '#ccc' : '#fff'
+                    }
+                  ]}
+                >
+                  Submit Tag Report
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAwareScrollView>
+      </View>
+    );
+  }
 
   getConnectionInfo = () => {
     return !this.state.isConnected ? <OfflineNotice /> : null;
@@ -462,10 +626,7 @@ export default HomeScreen;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'column',
+    height: 700,
     backgroundColor: '#0B7EA0',
     paddingLeft: 20,
     paddingRight: 20
@@ -474,9 +635,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#0B7EA0'
   },
   paragraph: {
-    fontSize: 12,
+    fontSize: 16,
     textAlign: 'center',
-    color: '#ccc',
+    color: 'black',
+    marginTop: 10,
     marginBottom: 10,
     fontStyle: 'italic'
   },

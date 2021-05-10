@@ -17,14 +17,14 @@ export default class WelcomeScreen extends React.Component {
   };
 
   async loadFontsAsync() {
-    await Font.loadAsync({
-      'PermanentMarker-Regular': require('../../../assets/fonts/Permanent_Marker/PermanentMarker-Regular.ttf')
-    });
-    this.setState({ fontsLoaded: true });
+    // await Font.loadAsync({
+    //   'PermanentMarker-Regular': require('../../../assets/fonts/Permanent_Marker/PermanentMarker-Regular.ttf')
+    // });
+    // this.setState({ fontsLoaded: true });
   }
 
   async componentDidMount() {
-    await this.loadFontsAsync();
+   console.log('welcome screen loaded');
   }
 
   componentWillUnmount() {
@@ -43,7 +43,7 @@ export default class WelcomeScreen extends React.Component {
   });
 
   render() {
-    if (this.state.fontsLoaded) {
+
       return (
         <View style={styles.container}>
           <View
@@ -70,7 +70,7 @@ export default class WelcomeScreen extends React.Component {
                 fontSize: 28,
                 padding: 2,
                 color: '#efefef',
-                fontFamily: 'PermanentMarker-Regular'
+                
               }}
             >
               Tag Reporter
@@ -97,9 +97,7 @@ export default class WelcomeScreen extends React.Component {
           </TouchableOpacity>
         </View>
       );
-    } else {
-      return <AppLoading />;
-    }
+    
   }
 }
 
@@ -121,6 +119,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     padding: 2,
     color: '#efefef',
-    fontFamily: 'PermanentMarker-Regular'
+    // fontFamily: 'PermanentMarker-Regular'
   }
 });

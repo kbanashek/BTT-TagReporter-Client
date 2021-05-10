@@ -9,8 +9,10 @@ import { createStore, applyMiddleware } from 'redux';
 import reducer from './src/components/app/reducer';
 import thunk from 'redux-thunk';
 import { Ionicons } from '@expo/vector-icons';
-import { AntDesign } from '@expo/vector-icons';
+import { AntDesign, FontAwesome } from '@expo/vector-icons';
+
 import Amplify from '@aws-amplify/core';
+import { DataStore } from '@aws-amplify/datastore';
 import { Auth, Hub } from 'aws-amplify';
 import awsmobile from './aws-exports';
 import * as Font from 'expo-font';
@@ -23,6 +25,8 @@ import ForgetPasswordScreen from './src/components/screens/ForgetPasswordScreen'
 import HomeScreen from './src/components/screens/HomeScreen';
 import SettingsScreen from './src/components/screens/SettingsScreen';
 import TagLogScreen from './src/components/screens/TagLogScreen';
+import TagMapScreen from './src/components/screens/TagMapScreen';
+
 
 const logo = require('./assets/header.png');
 
@@ -52,6 +56,18 @@ const configurations = {
       tabBarIcon: ({ tintColor }) => (
         <AntDesign
           name="book"
+          style={{ fontSize: 26, color: tintColor, paddingBottom: 35 }}
+        />
+      )
+    }
+  },
+  TagMap: {
+    screen: TagMapScreen,
+    navigationOptions: {
+      tabBarLabel: 'Tag Map',
+      tabBarIcon: ({ tintColor }) => (
+        <FontAwesome
+          name="map-marker"
           style={{ fontSize: 26, color: tintColor, paddingBottom: 35 }}
         />
       )
@@ -158,14 +174,14 @@ export default class App extends React.Component {
   };
 
   loadFontsAsync = async () => {
-    await Font.loadAsync({
-      'PermanentMarker-Regular': require('./assets/fonts/Permanent_Marker/PermanentMarker-Regular.ttf')
-    });
-    this.setState({ fontsLoaded: true });
+    // await Font.loadAsync({
+    //   'PermanentMarker-Regular': require('./assets/fonts/Permanent_Marker/PermanentMarker-Regular.ttf')
+    // });
+    // this.setState({ fontsLoaded: true });
   };
 
   authListen = async () => {
-    Hub.listen('auth', (data) => {
+    Hub.listen('auth', data => {
       const { payload } = data;
       console.log('A new auth event has happened');
       if (payload.event === 'signIn') {
@@ -174,14 +190,15 @@ export default class App extends React.Component {
       }
       if (payload.event === 'signOut') {
         console.log('a user has signed out!');
+        DataStore.clear();
         this.setState({ user: null });
       }
     });
-  }
+  };
 
   async componentDidMount() {
     await this.authListen();
-    await this.loadFontsAsync();
+    //await this.loadFontsAsync();
     await this.getCurrentUser();
   }
 
@@ -221,5 +238,3 @@ export default class App extends React.Component {
     );
   }
 }
- 
-

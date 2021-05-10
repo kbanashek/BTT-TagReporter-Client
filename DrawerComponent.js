@@ -81,6 +81,12 @@ export class DrawerComponent extends React.Component {
               >
                 <Text style={styles.navItemText}>Tag Log</Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.navItemStyle}
+                onPress={() => this.navigateToScreen('Tag Log')}
+              >
+                <Text style={styles.navItemText}>Tag Map</Text>
+              </TouchableOpacity>
               {/* <TouchableOpacity
                 style={styles.navItemStyle}
                 onPress={() => this.navigateToScreen('ImagePickerExample')}
