@@ -99,11 +99,11 @@ export default class SignUpScreen extends React.Component {
   };
 
   async componentDidMount() {
-    await Font.loadAsync({
-      Roboto: require('native-base/Fonts/Roboto.ttf'),
-      Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf'),
-      'PermanentMarker-Regular': require('../../../assets/fonts/Permanent_Marker/PermanentMarker-Regular.ttf')
-    });
+    // await Font.loadAsync({
+    //   Roboto: require('native-base/Fonts/Roboto.ttf'),
+    //   Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf'),
+    //   'PermanentMarker-Regular': require('../../../assets/fonts/Permanent_Marker/PermanentMarker-Regular.ttf')
+    // });
   }
 
   showModal = () => {
