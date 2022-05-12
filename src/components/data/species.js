@@ -1,7 +1,6 @@
- const species = [
+const species = [
   { label: 'Bonefish    ', value: 'bonefish' },
-  { label: 'Permit      ', value: 'permit' }
+  { label: ' Permit', value: 'permit' }
 ];
-
 
 export default species;

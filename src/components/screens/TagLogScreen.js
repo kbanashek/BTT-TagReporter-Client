@@ -1,128 +1,141 @@
-import React from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   StyleSheet,
   SafeAreaView,
   View,
   Text,
-  ImageBackground} from 'react-native';
-
+  ImageBackground
+} from 'react-native';
 import { DataStore } from '@aws-amplify/datastore';
 import { TagReports } from '../../models';
 import { Container, Content, List, ListItem, Left, Body } from 'native-base';
 import moment from 'moment';
-import * as Font from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
 
-const bonefish = require('../../../assets/bonefish.png');
-const permit = require('../../../assets/permit.png');
+const bonefishImg = require('../../../assets/bonefish.png');
+const permitImg = require('../../../assets/permit.png');
 
-export default class TagLogScreen extends React.Component {
-  state = { tagReports: [] };
+const TagLogScreen = props => {
+  const [tagReports, setTagReports] = useState([]);
+  const navFocusListener = useRef();
 
-  async componentDidMount() {
-    const { navigation } = this.props;
+  const loadTagReports = async () => {
+    console.log('fetching tagReports...');
+    const tagReportResults = await DataStore.query(TagReports);
+    const sortByTagDate = (a, b) => {
+      const dateA = new Date(a.tagDate).getTime();
+      const dateB = new Date(b.tagDate).getTime();
+      return dateA < dateB ? 1 : -1;
+    };
 
-    //await this.loadFonts();
+    tagReportResults.sort(sortByTagDate);
+    setTagReports([...tagReportResults]);
+  };
 
-    await this.loadTagReports();
+  useEffect(() => {
+    loadTagReports();
 
-    DataStore.observe(TagReports).subscribe(() => {
-      this.loadTagReports();
+    const subscription = DataStore.observe(TagReports).subscribe(x => {
+      loadTagReports();
+
+      //dedupeTagReports(tagReports, id, x, setTagReports);
     });
 
-    this.navFocusListener = await navigation.addListener('didFocus', () => {
-      console.log('REFOCUS');
-      // await this.loadTagReports();
-    });
-  }
+    return () => subscription.unsubscribe();
+  }, []);
 
-  componentWillUnmount() {
-    this.navFocusListener.remove();
-  }
+  function dedupeTagReports(tagReports, x, setTagReports) {
+    const id = x.element.id;
+    const updateTagReports = [...tagReports];
+    if (!updateTagReports.some(x => x.id === id)) {
+      console.log('not found..');
 
-  async loadFonts() {
-    // await Font.loadAsync({
-    //   Roboto: require('native-base/Fonts/Roboto.ttf'),
-    //   Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf'),
-    //   'PermanentMarker-Regular': require('../../../assets/fonts/Permanent_Marker/PermanentMarker-Regular.ttf')
-    // });
-  }
-
-  async loadTagReports() {
-    try {
-      const tagReports = await DataStore.query(TagReports);
-      const sortByTagDate = (a, b) => {
-        const dateA = new Date(a.tagDate).getTime();
-        const dateB = new Date(b.tagDate).getTime();
-        return dateA < dateB ? 1 : -1;
-      };
-
-      tagReports.sort(sortByTagDate);
-
-      this.setState({
-        tagReports: tagReports
-      });
-    } catch (err) {
-      console.log('error fetching tagReports...', err);
+      updateTagReports.push(x.element);
+      setTagReports([updateTagReports]);
     }
   }
+  const BonefishTile = ({ tagReport }) => (
+    <ImageBackground
+      source={bonefishImg}
+      style={{
+        width: '100%',
+        height: '100%'
+      }}
+    >
+      <View style={styles.tagDetailRow}>
+        <Text style={styles.textStyleSM}>
+          {tagReport.fishType.substring(0, 1).toUpperCase()}
+          {tagReport.fishType.substring(1, tagReport.fishType.length)}
+        </Text>
+      </View>
+    </ImageBackground>
+  );
 
-  render() {
+  const PermitTile = ({ tagReport }) => (
+    <>
+      <ImageBackground
+        source={permitImg}
+        style={{
+          width: '100%',
+          height: '100%'
+        }}
+      >
+        <View style={styles.tagDetailRow}>
+          {tagReport.fishType ? (
+            <Text style={styles.textStyleSM}>
+              {tagReport.fishType.substring(0, 1).toUpperCase()}
+              {tagReport.fishType.substring(1, tagReport.fishType.length)}
+            </Text>
+          ) : null}
+        </View>
+      </ImageBackground>
+    </>
+  );
+
+  const CatchTile = ({ tagReport }) => {
     return (
-      <SafeAreaView style={styles.container}>
+      <Left
+        style={{
+          flex: 0.5,
+          backgroundColor: '#ccc',
+          height: 100
+        }}
+      >
+        {tagReport.fishType && tagReport.fishType === 'bonefish' ? (
+          <BonefishTile tagReport={tagReport} />
+        ) : (
+          <PermitTile tagReport={tagReport} />
+        )}
+      </Left>
+    );
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {tagReports.length !== 0 ? (
         <View style={styles.listContainer}>
           <Container>
             <Content>
               <List style={styles.list}>
-                {this.state.tagReports.map((tagReport, index) => (
+                {tagReports.map((tagReport, index) => (
                   <ListItem key={index}>
-                    <Left
+                    <CatchTile tagReport={tagReport} />
+                    <Body
                       style={{
-                        flex: 0.5,
-                        backgroundColor: '#ccc',
-                        height: 100
+                        paddingLeft: 20
                       }}
                     >
-                      {tagReport.fishType === 'bonefish' ? (
-                        <ImageBackground
-                          source={bonefish}
-                          style={{ width: '100%', height: '100%' }}
-                        >
-                          <View style={styles.tagDetailRow}>
-                            <Text style={styles.textStyleSM}>
-                              {tagReport.fishType.substring(0, 1).toUpperCase()}
-                              {tagReport.fishType.substring(
-                                1,
-                                tagReport.fishType.length
-                              )}
-                            </Text>
-                          </View>
-                        </ImageBackground>
-                      ) : (
-                        <ImageBackground
-                          source={permit}
-                          style={{ width: '100%', height: '100%' }}
-                        >
-                          <View style={styles.tagDetailRow}>
-                            <Text style={styles.textStyleSM}>
-                              {tagReport.fishType.substring(0, 1).toUpperCase()}
-                              {tagReport.fishType.substring(
-                                1,
-                                tagReport.fishType.length
-                              )}
-                            </Text>
-                          </View>
-                        </ImageBackground>
-                      )}
-                    </Left>
-                    <Body style={{ paddingLeft: 20 }}>
                       <Text note numberOfLines={1} style={styles.textStyle}>
                         Captain: {tagReport.guideName}
                       </Text>
                       <Text note numberOfLines={2} style={styles.textStyle}>
                         {moment(tagReport.tagDate).format(' MMMM Do YYYY')}
                       </Text>
-                      <View style={{ flexDirection: 'row' }}>
+                      <View
+                        style={{
+                          flexDirection: 'row'
+                        }}
+                      >
                         <Ionicons name="ios-pin" style={styles.iconStyle} />
                         <Text note numberOfLines={2} style={styles.textStyle}>
                           {tagReport.tagArea}
@@ -141,16 +154,27 @@ export default class TagLogScreen extends React.Component {
             </Content>
           </Container>
         </View>
-      </SafeAreaView>
-    );
-  }
-}
+      ) : (
+        <View style={styles.listContainer}>
+          <Text
+            style={{
+              textAlign: 'center'
+            }}
+          >
+            No tag reports currently available
+          </Text>
+        </View>
+      )}
+    </SafeAreaView>
+  );
+};
+
+export default TagLogScreen;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0B7EA0',
-
     flexDirection: 'column'
   },
   listContainer: {
@@ -180,13 +204,11 @@ const styles = StyleSheet.create({
   textStyleSM: {
     fontSize: 18,
     paddingTop: 2,
-    color: '#fff',
-    // fontFamily: 'PermanentMarker-Regular'
+    color: '#fff'
   },
   speciesType: {
     fontSize: 16,
     fontWeight: 'bold',
-    // fontFamily: 'PermanentMarker-Regular',
     color: '#fff'
   },
   iconStyle: {

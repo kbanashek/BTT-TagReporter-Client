@@ -6,7 +6,8 @@ import {
   TouchableOpacity,
   Platform,
   Dimensions,
-  Keyboard
+  Keyboard,
+  Alert
 } from 'react-native';
 
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -20,27 +21,22 @@ import * as Location from 'expo-location';
 import * as Permissions from 'expo-permissions';
 import moment from 'moment';
 import * as Font from 'expo-font';
+import { AppLoading } from 'expo';
 import RadioForm from 'react-native-simple-radio-button';
 import * as _ from 'lodash';
 import OfflineNotice from '../../components/screens/OfflineNotice';
 import species from '../data/species';
 import catchType from '../data/catchType';
-import locations from '../data/locations';
+import supportedCountries from '../data/locations';
 import COLORS from '../../constants/constants';
-
 import { DataStore } from '@aws-amplify/datastore';
 import { TagReports } from '../../models';
 import {
   WebViewLeaflet,
-  WebViewLeafletEvents,
-  AnimationType
+  WebViewLeafletEvents
 } from 'react-native-webview-leaflet';
-
-// const icon = WebViewLeaflet.icon({
-//   iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
-//   iconUrl: require('leaflet/dist/images/marker-icon.png'),
-//   shadowUrl: require('leaflet/dist/images/marker-shadow.png')
-// })
+import Modal from 'react-native-modalbox';
+import Roboto from '../../../node_modules/@expo-google-fonts/roboto/Roboto_500Medium.ttf';
 
 const appIcon = require('../../../assets/icon.png');
 
@@ -74,64 +70,29 @@ class HomeScreen extends React.Component {
     positionMarker: {},
     mapMarkers: [],
     mapZoom: 16,
-    showMap: true
+    showMap: true,
+    showTagReport: false,
+    loading: true
   };
 
   static navigationOptions = () => ({
     animationEnabled: true
   });
 
-  async componentDidMount() {
-    const { navigation } = this.props;
-
-    // this.navFocusListener = await navigation.addListener(
-    //   'didFocus',
-    //   async () => {
-    //     // do some API calls here
-    //     console.log('focused$$$$$');
-    //     await this.getCurrentLocation();
-    //   }
-    // );
-
-    // await Font.loadAsync({
-    //   Roboto: require('native-base/Fonts/Roboto.ttf'),
-    //   Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf'),
-    //   'PermanentMarker-Regular': require('../../../assets/fonts/Permanent_Marker/PermanentMarker-Regular.ttf')
-    // });
-  }
+  UNSAFE_componentWillMount = async () => {
+    await Font.loadAsync({
+      Roboto_medium: Roboto
+    });
+    //this.setState({ loading: false });
+  };
 
   componentDidMount = async () => {
+    console.disableYellowBox = true;
+
     await this.getCurrentUser();
 
     await this.getCurrentLocation();
-
-    const headerHeight = 78;
-    this.keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      () => {
-        console.log('keyboard shown');
-        this.setState({
-          // containerHeight: height - endCoordinates.height - headerHeight,
-          showMap: false
-        });
-      }
-    );
-    this.keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
-      () => {
-        console.log('keyboard hidden');
-        this.setState({
-          // containerHeight: height - headerHeight,
-          showMap: true
-        });
-      }
-    );
   };
-
-  componentWillUnmount() {
-    this.keyboardDidShowListener.remove();
-    this.keyboardDidHideListener.remove();
-  }
 
   handleConnectivityChange = state => {
     this.setState({ isConnected: state.isConnected });
@@ -144,7 +105,7 @@ class HomeScreen extends React.Component {
         text: 'Your device currently does not have connectivity',
         buttonText: 'Okay',
         duration: 13000,
-        position: 'bottom',
+        position: 'center',
         type: 'success'
       });
     }
@@ -166,7 +127,7 @@ class HomeScreen extends React.Component {
     })
       .then(location => {
         this.setState({ currentPosition: location.coords });
-        console.log('location.coords.latitude', location.coords.latitude);
+        console.log('=> getCurrentPositionAsync');
         const latLong = {
           lat: location.coords.latitude,
           lng: location.coords.longitude
@@ -181,17 +142,7 @@ class HomeScreen extends React.Component {
         });
 
         // if (location.coords) {
-        //   Location.reverseGeocodeAsync({
-        //     longitude: location.coords.longitude,
-        //     latitude: location.coords.latitude
-        //   }).then(area => {
-        //     if (area.length) {
-        //       const { city, region, country, name } = area[0];
-        //       const locatedArea = city + ', ' + region + ', ' + country;
-        //       console.log('location NAME:', name);
-        //       this.setState({ tagArea: locatedArea });
-        //     }
-        //   });
+        //   this.getCountry(location.coords.longitude, location.coords.latitude);
         // }
       })
       .catch(e => {
@@ -205,7 +156,7 @@ class HomeScreen extends React.Component {
         this.setState({
           location: latLong,
           message:
-            'Please select the tag location on the map and enter the required tag report data',
+            '*Please select the tag location on the map and enter the required tag report data*',
           mapZoom: 3
         });
       });
@@ -227,10 +178,10 @@ class HomeScreen extends React.Component {
 
     const { phone_number, email } = user;
 
-    // if (!tagLocationLatLong) {
-    //   alert('Please select a tag location on the map');
-    //   return;
-    // }
+    if (!mapMarkers.length) {
+      Alert.alert('Please select a tag location on the map');
+      return;
+    }
 
     const tagLocationLatLong = `${mapMarkers[0].position.lat},${mapMarkers[0].position.lng}`;
 
@@ -252,37 +203,45 @@ class HomeScreen extends React.Component {
       Toast.show({
         text: 'Tag successfully submitted!',
         buttonText: 'Okay',
-        duration: 5000,
+        duration: 19000,
         position: 'bottom',
         type: 'success'
       });
 
-      const submitSuccess = await DataStore.save(
-        new TagReports({ ...tagReport })
-      );
-
+      await DataStore.save(new TagReports({ ...tagReport }));
+      this.refs.modal1.close();
       await this.clearTagReportState();
 
-      await this.getLocation();
+      //await this.getLocation();
     } catch (err) {
       console.log('Warning!!! - error creating tarReport...', err);
       this.setState({
         errorMessage: 'Unable to submit tag report'
       });
-      alert(err.message);
 
       Toast.show({
         text: 'Unable to submit tag report',
         buttonText: 'Okay',
-        duration: 5000,
+        duration: 19000,
         position: 'bottom'
       });
     }
   };
 
-  onChange = (key, value) => {
+  onStatePropUpdate = (key, value) => {
     this.setState({ [key]: value });
     this.enableSubmission(value);
+  };
+
+  checkIfCountryIsSupported = countryName => {
+    const country = _.find(supportedCountries, { label: countryName });
+    // console.log('=> loadCountry:', countryName);
+    if (!country) {
+      console.log('country code not found:');
+      alert('Selected location not currently supported by BTT tag reporting');
+    }
+
+    return country;
   };
 
   formatTagReport = async (
@@ -298,18 +257,22 @@ class HomeScreen extends React.Component {
     phone_number,
     recapture
   ) => {
-    const country = _.find(locations, { value: tagLocationCode }).label;
+    const country = this.checkIfCountryIsSupported(tagLocationCode);
 
-    console.log('country code:', country);
+    if (!country) {
+      return;
+    }
+
+    console.log('country located:', country);
     return {
-      tagArea: tagArea ? tagArea : country,
+      tagArea: tagArea ? tagArea : country.label,
       email,
       fishType,
       comment,
       recapture,
-      tagNumber: tagLocationCode + '-' + tagNumber,
+      tagNumber: country.value + '-' + tagNumber,
       tagDate: moment().format(),
-      tagLocation: location ? location : country,
+      tagLocation: location ? location : country.label,
       fishLength: fishLength + ' ' + user['custom:preferredMeasure'],
       guideName: user['custom:firstName'] + ' ' + user['custom:lastName'],
       phone: phone_number
@@ -327,14 +290,16 @@ class HomeScreen extends React.Component {
       fishLength,
       tagLocationCode,
       user,
-      mapMarkers
+      catchType
     } = this.state;
 
+    console.log('catchType', catchType);
     const isButtonDisabled =
       this.isEmpty(tagNumber) ||
       this.isEmpty(fishType) ||
       this.isEmpty(fishLength) ||
       this.isEmpty(tagLocationCode) ||
+      this.isEmpty(catchType) ||
       this.isEmpty(user);
 
     this.setState({ isDisabled: isButtonDisabled });
@@ -358,8 +323,8 @@ class HomeScreen extends React.Component {
       });
       console.log('NOT calling getLocation$$$$$');
       this.setState({ tagArea: 'Key Largo, FL' });
+      await this.getLocation();
     } else {
-      console.log('calling getLocation$$$$$');
       await this.getLocation();
     }
   };
@@ -372,29 +337,13 @@ class HomeScreen extends React.Component {
       comment: '',
       tagDate: null,
       recapture: null,
-      isDisabled: true
+      isDisabled: true,
+      mapMarkers: [],
+      catchType: false
     });
   };
 
-  renderLocationTag = () => {
-    const locationSelectPlaceHolder = {
-      label: 'Select tag region...',
-      value: null,
-      color: '#fff',
-      fontWeight: 'bold'
-    };
-
-    return (
-      <RNPickerSelect
-        placeholder={locationSelectPlaceHolder}
-        onValueChange={value => this.setState({ tagLocationCode: value })}
-        items={locations}
-        style={pickerStyles}
-      />
-    );
-  };
-
-  onMapSelection = message => {
+  onMapSelection = async message => {
     switch (message.event) {
       case WebViewLeafletEvents.ON_MAP_MARKER_CLICKED:
         // alert(
@@ -402,6 +351,7 @@ class HomeScreen extends React.Component {
         // );
 
         break;
+
       case WebViewLeafletEvents.ON_MAP_TOUCHED:
         const position = message.payload;
 
@@ -409,6 +359,7 @@ class HomeScreen extends React.Component {
           `Map Touched at:`,
           `${JSON.stringify(position.touchLatLng)}`
         );
+
         const mapMarker = {
           id: '1',
           position: position.touchLatLng,
@@ -416,21 +367,31 @@ class HomeScreen extends React.Component {
           title: 'Selected Tag Location',
           size: [32, 32]
         };
+
+        //this.setState({ showTagReport: true });
+        await this.getCountry(
+          position.touchLatLng.lng,
+          position.touchLatLng.lat
+        );
+
+        console.log('SELECTEZd CTY:', this.state.tagLocationCode);
+
+        this.refs.modal1.open();
+
         const mapMarkers = [];
         mapMarkers.push(mapMarker);
         this.setState({ mapMarkers: mapMarkers });
         this.enableSubmission(mapMarkers);
+
         break;
-      default:
-      //console.log("App received", message);
     }
   };
 
-  renderLocation = () => {
-    return this.state.tagArea ? (
+  renderCountryLocation = () => {
+    return this.state.tagLocationCode ? (
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
         <Ionicons name="ios-pin" style={styles.iconStyle} />
-        <Text style={styles.locationText}>{this.state.tagArea}</Text>
+        <Text style={styles.locationText}>{this.state.tagLocationCode}</Text>
       </View>
     ) : null;
   };
@@ -438,7 +399,6 @@ class HomeScreen extends React.Component {
   renderMap = () => {
     const baseLayerMaps = [
       {
-        zIndex: 1,
         subdomains: '0123',
         maxZoom: 22,
         attribution: 'Google maps',
@@ -447,7 +407,25 @@ class HomeScreen extends React.Component {
     ];
 
     return this.state.location ? (
-      <View style={{ height: 275, backgroundColor: '#ccc', zIndex: 100 }}>
+      <View style={{ height: SCREEN_HEIGHT, backgroundColor: '#ccc' }}>
+        <View
+          style={{
+            width: 200,
+            height: 30,
+            alignSelf: 'center',
+
+            backgroundColor: '#fff'
+          }}
+        >
+          <Text
+            style={{
+              textAlign: 'center',
+              padding: 8
+            }}
+          >
+            Select tag location on map
+          </Text>
+        </View>
         <WebViewLeaflet
           onMessageReceived={this.onMapSelection}
           mapLayers={baseLayerMaps}
@@ -467,7 +445,7 @@ class HomeScreen extends React.Component {
     ) : (
       <View
         style={{
-          height: 275,
+          height: SCREEN_HEIGHT - 175,
           backgroundColor: '#ccc',
           textAlign: 'center',
           justifyContent: 'center',
@@ -482,13 +460,37 @@ class HomeScreen extends React.Component {
             marginTop: 0
           }}
         >
-          Loading Current Location...
+          Loading Current Device Location...
         </Text>
       </View>
     );
   };
 
-  SCREEN_HEIGHT = Dimensions.get('screen').height;
+  async getCountry(longitude, latitude) {
+    console.log('=> getCountry:', longitude);
+
+    return Location.reverseGeocodeAsync({
+      longitude: longitude,
+      latitude: latitude
+    }).then(area => {
+      if (area.length) {
+        const { city, region, country, name } = area[0];
+        // const locatedArea = city + ', ' + region + ', ' + country;
+        console.log('country SET:', country);
+        this.setState({ tagLocationCode: country });
+
+        const locatedCountry = this.checkIfCountryIsSupported(country);
+        if (locatedCountry) {
+          // this.setState({ showTagReport: true });
+        } else {
+          // this.setState({ showTagReport: false });
+        }
+      } else {
+        // this.setState({ showTagReport: false });
+        console.log('NO country NAME:');
+      }
+    });
+  }
 
   render() {
     let message = '';
@@ -500,14 +502,28 @@ class HomeScreen extends React.Component {
       message = this.state.message;
     }
 
+    {
+      this.state.loading && (
+        <View style={[{ height: 500 }]}>
+          <AppLoading />
+        </View>
+      );
+    }
+
     return (
-      <View style={{ flex: 1 }}>
-        {this.state.showMap ? <View>{this.renderMap()}</View> : null}
-        <KeyboardAwareScrollView enableOnAndroid={true} keyboardOpeningTime={0}>
+      <View>
+        {this.renderMap()}
+        <Modal
+          ref={'modal1'}
+          style={styles.modalContainer}
+          swipeToClose={false}
+          position={'top'}
+          backdropPressToClose={true}
+        >
           <View style={styles.container}>
             {this.getConnectionInfo()}
-            {this.renderLocation()}
-            <Text style={styles.paragraph}>{message}</Text>
+            {/* {this.renderCountryLocation()} */}
+
             <RadioForm
               ref="radioForm"
               radio_props={species}
@@ -519,23 +535,27 @@ class HomeScreen extends React.Component {
               buttonSize={50}
               buttonOuterSize={55}
               labelStyle={{
-                fontSize: 17,
+                fontSize: 15,
                 color: 'white',
-                padding: 10
+                padding: 5,
+                top: 40,
+                right: 65,
+                alignItems: 'center'
               }}
               onPress={value => {
                 this.setState({ fishType: value });
               }}
               style={{
-                padding: 5
+                paddingLeft: 35,
+                paddingBottom: 25
               }}
             />
-            <View style={styles.dropDownInput}>{this.renderLocationTag()}</View>
+            {/* <View style={styles.dropDownInput}>{this.renderLocationTag()}</View> */}
             <Item style={styles.itemStyle}>
               <Input
                 style={styles.input}
                 placeholderTextColor={COLORS.MEDIUM_GREY}
-                onChangeText={v => this.onChange('tagNumber', v)}
+                onChangeText={v => this.onStatePropUpdate('tagNumber', v)}
                 value={this.state.tagNumber}
                 placeholder="Tag Number (do not include prefix)"
               />
@@ -544,7 +564,7 @@ class HomeScreen extends React.Component {
               <Input
                 style={styles.input}
                 placeholderTextColor={COLORS.MEDIUM_GREY}
-                onChangeText={v => this.onChange('fishLength', v)}
+                onChangeText={v => this.onStatePropUpdate('fishLength', v)}
                 value={this.state.fishLength}
                 placeholder={fishLengthPlaceHolder}
                 keyboardType={'phone-pad'}
@@ -554,25 +574,32 @@ class HomeScreen extends React.Component {
               <Input
                 placeholderTextColor={COLORS.MEDIUM_GREY}
                 style={styles.input}
-                onChangeText={v => this.onChange('comment', v)}
+                onChangeText={v => this.onStatePropUpdate('comment', v)}
                 value={this.state.comment}
                 placeholder="Comment"
               />
             </Item>
             <RadioForm
+              ref="radioForm2"
               radio_props={catchType}
-              initial={this.state.recapture}
+              initial={this.state.catchType}
               formHorizontal={true}
               labelHorizontal={true}
               buttonColor={'#2196f3'}
               animation={true}
-              buttonSize={30}
-              buttonOuterSize={35}
+              buttonSize={50}
+              buttonOuterSize={55}
               labelStyle={{
-                color: 'white'
+                fontSize: 15,
+                color: 'white',
+                padding: 5,
+                top: 40,
+                right: 65
               }}
-              onPress={value => {
-                this.setState({ recapture: value });
+              onPress={value => this.onStatePropUpdate('catchType', value)}
+              style={{
+                paddingLeft: 35,
+                paddingBottom: 20
               }}
             />
             <View style={styles.loginButtonSection}>
@@ -601,7 +628,7 @@ class HomeScreen extends React.Component {
               </TouchableOpacity>
             </View>
           </View>
-        </KeyboardAwareScrollView>
+        </Modal>
       </View>
     );
   }
@@ -624,12 +651,12 @@ class HomeScreen extends React.Component {
 
 export default HomeScreen;
 
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
   container: {
-    height: 700,
-    backgroundColor: '#0B7EA0',
-    paddingLeft: 20,
-    paddingRight: 20
+    padding: 20,
+    backgroundColor: '#0B7EA0'
   },
   screen: {
     backgroundColor: '#0B7EA0'
@@ -659,7 +686,8 @@ const styles = StyleSheet.create({
   loginButtonSection: {
     width: '100%',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    color: '#efefef'
   },
   buttonStyle: {
     alignItems: 'center',
@@ -668,7 +696,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     borderRadius: 4,
 
-    width: Platform.OS === 'ios' ? 330 : 350
+    width: Platform.OS === 'ios' ? 300 : 320
   },
   buttonText: {
     fontSize: 24,
@@ -712,6 +740,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 19,
     marginTop: 18
+  },
+
+  modalContainer: {
+    height: SCREEN_HEIGHT - 284,
+    width: SCREEN_WIDTH - 50,
+    marginTop: 20,
+    backgroundColor: 'transparent'
   }
 });
 
